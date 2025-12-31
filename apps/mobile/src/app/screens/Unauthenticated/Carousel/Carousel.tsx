@@ -1,0 +1,242 @@
+import React, { useRef, useState, useMemo } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  Dimensions,
+  TouchableOpacity,
+} from 'react-native';
+import { useTheme } from '@contexts/ThemeContext';
+import { useAuth } from '@contexts/AuthContext';
+
+const { width } = Dimensions.get('window');
+
+interface Slide {
+  key: string;
+  title: string;
+  description: string;
+  color: string;
+}
+
+const slides: Slide[] = [
+  {
+    key: '1',
+    title: 'Peça sua viagem',
+    description: 'Escolha origem e destino, veja preço e tempo estimado.',
+    color: '#4F46E5',
+  },
+  {
+    key: '2',
+    title: 'Acompanhe em tempo real',
+    description: 'Veja a localização do motorista e o trajeto no mapa.',
+    color: '#059669',
+  },
+  {
+    key: '3',
+    title: 'Pague de forma segura',
+    description: 'Cartão, PIX ou dinheiro — escolha a opção que preferir.',
+    color: '#D97706',
+  },
+];
+
+interface Props {
+  onGetStarted?: () => void;
+}
+
+export default function Carousel({ onGetStarted }: Props) {
+  const { theme } = useTheme();
+  const { markCarouselAsSeen } = useAuth();
+  const listRef = useRef<FlatList<Slide> | null>(null);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+
+  const dynamicStyles = useMemo(
+    () => createDynamicStyles(theme),
+    [theme]
+  );
+
+  const handleNext = async () => {
+    if (currentIndex < slides.length - 1) {
+      listRef.current?.scrollToIndex({
+        index: currentIndex + 1,
+        animated: true,
+      });
+      setCurrentIndex(currentIndex + 1);
+    } else {
+      // Marca carrossel como visto e navega para login
+      await markCarouselAsSeen();
+      onGetStarted?.();
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentIndex > 0) {
+      listRef.current?.scrollToIndex({
+        index: currentIndex - 1,
+        animated: true,
+      });
+      setCurrentIndex(currentIndex - 1);
+    }
+  };
+
+  const isLastSlide = currentIndex === slides.length - 1;
+  const isFirstSlide = currentIndex === 0;
+
+  return (
+    <View style={dynamicStyles.container}>
+      <FlatList
+        ref={listRef}
+        data={slides}
+        horizontal
+        pagingEnabled
+        scrollEventThrottle={16}
+        showsHorizontalScrollIndicator={false}
+        keyExtractor={(item) => item.key}
+        onMomentumScrollEnd={(e) => {
+          const newIndex = Math.round(
+            e.nativeEvent.contentOffset.x / width
+          );
+          setCurrentIndex(newIndex);
+        }}
+        renderItem={({ item }) => (
+          <View style={[dynamicStyles.slide, { width }]}>
+            <View style={[dynamicStyles.heroCircle, { backgroundColor: item.color }]} />
+            <Text style={dynamicStyles.title}>{item.title}</Text>
+            <Text style={dynamicStyles.description}>{item.description}</Text>
+          </View>
+        )}
+      />
+
+      <View style={dynamicStyles.dotsContainer}>
+        {slides.map((_, i) => (
+          <View
+            key={i}
+            style={[
+              dynamicStyles.dot,
+              i === currentIndex ? dynamicStyles.activeDot : undefined,
+            ]}
+          />
+        ))}
+      </View>
+
+      <View style={dynamicStyles.buttonContainer}>
+        <TouchableOpacity
+          style={[dynamicStyles.button, dynamicStyles.prevButton, isFirstSlide && dynamicStyles.buttonDisabled]}
+          onPress={handlePrevious}
+          disabled={isFirstSlide}
+        >
+          <Text style={[dynamicStyles.buttonText, isFirstSlide && dynamicStyles.buttonTextDisabled]}>
+            Anterior
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[dynamicStyles.button, dynamicStyles.nextButton]}
+          onPress={handleNext}
+        >
+          <Text style={dynamicStyles.buttonText}>
+            {isLastSlide ? 'Começar' : 'Próximo'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+const createDynamicStyles = (theme: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 24,
+    },
+    slide: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 24,
+    },
+    heroCircle: {
+      width: 180,
+      height: 180,
+      borderRadius: 90,
+      marginBottom: 48,
+      elevation: 4,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+    },
+    title: {
+      fontSize: 26,
+      fontWeight: '700',
+      textAlign: 'center',
+      marginBottom: 16,
+      color: theme.colors.text,
+    },
+    description: {
+      fontSize: 16,
+      color: theme.colors.textSecondary,
+      textAlign: 'center',
+      paddingHorizontal: 12,
+      lineHeight: 24,
+    },
+    dotsContainer: {
+      flexDirection: 'row',
+      marginVertical: 32,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    dot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: theme.colors.border,
+      marginHorizontal: 6,
+    },
+    activeDot: {
+      backgroundColor: theme.colors.primary,
+      width: 28,
+      borderRadius: 4,
+    },
+    buttonContainer: {
+      flexDirection: 'row',
+      width: '100%',
+      paddingHorizontal: 24,
+      gap: 12,
+    },
+    button: {
+      flex: 1,
+      paddingVertical: 14,
+      paddingHorizontal: 24,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    },
+    prevButton: {
+      backgroundColor: theme.colors.surface,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    nextButton: {
+      backgroundColor: theme.colors.primary,
+    },
+    buttonDisabled: {
+      opacity: 0.5,
+    },
+    buttonText: {
+      color: theme.colors.background,
+      fontWeight: '600',
+      fontSize: 16,
+    },
+    buttonTextDisabled: {
+      color: theme.colors.textSecondary,
+    },
+  });
