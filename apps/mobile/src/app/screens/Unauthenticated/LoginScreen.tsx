@@ -101,7 +101,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               <Checkbox
                 value={rememberMe}
                 onValueChange={setRememberMe}
-                tintColor={theme.colors.primary}
+                color={theme.colors.primary}
               />
               <Text style={dynamicStyles.rememberMeText}>Lembrar-me</Text>
             </View>

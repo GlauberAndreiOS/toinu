@@ -121,7 +121,7 @@ export function ProfileScreen() {
     );
   }
 
-  const displayProfile = profile || user;
+  const displayProfile = (profile || user) as UserProfile;
 
   return (
     <ScrollView style={dynamicStyles.container}>

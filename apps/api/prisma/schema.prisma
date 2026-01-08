@@ -9,13 +9,57 @@ datasource db {
   provider = "postgresql"
 }
 
+enum UserRole {
+  DRIVER
+  PASSENGER
+}
+
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
   name      String
   password  String
+  role      UserRole @default(PASSENGER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  driver    Driver?
+  passenger Passenger?
+
   @@map("users")
+}
+
+model Driver {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  trips Trip[]
+
+  @@map("drivers")
+}
+
+model Passenger {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  trips Trip[]
+
+  @@map("passengers")
+}
+
+model Trip {
+  id          String   @id @default(uuid())
+  driverId    String
+  driver      Driver   @relation(fields: [driverId], references: [id])
+  passengerId String
+  passenger   Passenger @relation(fields: [passengerId], references: [id])
+  origin      String
+  destination String
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("trips")
 }

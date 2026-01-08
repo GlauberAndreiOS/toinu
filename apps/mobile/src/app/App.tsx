@@ -5,14 +5,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from '@contexts/ThemeContext';
 import { AuthProvider, useAuth } from '@contexts/AuthContext';
 import { HomeScreen, LoginScreen, RegisterScreen } from '@screens/Unauthenticated';
-import { ProfileScreen } from '@screens/Authenticated';
+import { AuthenticatedLayout } from '@screens/Authenticated';
 
 type UnauthenticatedScreen = 'home' | 'login' | 'register';
-type AuthenticatedScreen = 'profile' | 'dashboard';
 
 interface AppState {
   unauthenticatedScreen: UnauthenticatedScreen;
-  authenticatedScreen: AuthenticatedScreen;
 }
 
 /**
@@ -23,7 +21,6 @@ function AppContent() {
   const { isAuthenticated, logout, hasSeenCarousel, loading } = useAuth();
   const [appState, setAppState] = useState<AppState>({
     unauthenticatedScreen: 'home',
-    authenticatedScreen: 'profile',
   });
 
   // Atualiza tela inicial quando carousssel é carregado
@@ -31,7 +28,7 @@ function AppContent() {
     if (!loading) {
       setAppState((prev) => ({
         ...prev,
-        unauthenticatedScreen: hasSeenCarousel ? 'login' : 'home',
+        unauthenticatedScreen: !hasSeenCarousel ? 'login' : 'home',
       }));
     }
   }, [hasSeenCarousel, loading]);
@@ -55,14 +52,6 @@ function AppContent() {
     setAppState((prev) => ({
       ...prev,
       unauthenticatedScreen: 'login',
-    }));
-  };
-
-  // Handlers para telas autenticadas
-  const handleNavigateToProfile = () => {
-    setAppState((prev) => ({
-      ...prev,
-      authenticatedScreen: 'profile',
     }));
   };
 
@@ -91,11 +80,7 @@ function AppContent() {
   };
 
   const renderAuthenticatedScreen = () => {
-    switch (appState.authenticatedScreen) {
-      case 'profile':
-      default:
-        return <ProfileScreen />;
-    }
+    return <AuthenticatedLayout />;
   };
 
   return (

@@ -1,116 +1,49 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
-import { User } from '@toinu/shared-types';
+import { Injectable } from '@nestjs/common';
+import { User as UserSchema } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UsersRepository } from './users.repository';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private repository: UsersRepository) {}
 
-  async create(data: CreateUserDto): Promise<User> {
-    // Verificar se o email já existe
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email: data.email },
-    });
-    
-    if (existingUser) {
-      throw new ConflictException('Email já está em uso');
-    }
-
-    // Hash da senha
+  async create(data: CreateUserDto): Promise<UserSchema> {
     const hashedPassword = await bcrypt.hash(data.password, 10);
+    const { role, ...userData } = data;
 
-    const user = await this.prisma.user.create({
-      data: {
-        email: data.email,
-        name: data.name,
-        password: hashedPassword,
-      },
+    return this.repository.create({
+      ...userData,
+      password: hashedPassword,
+      role,
+      ...(role === 'DRIVER'
+        ? { driver: { create: {} } }
+        : { passenger: { create: {} } }),
     });
-
-    // Retornar sem a senha
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...userWithoutPassword } = user;
-    return userWithoutPassword;
   }
 
   async update(id: string, data: UpdateUserDto): Promise<boolean> {
-    const user = await this.prisma.user.findUnique({
-      where: { id },
-    });
-
-    if (!user) {
-      throw new NotFoundException('Usuário não encontrado');
-    }
-
-    const updateData: {
-      email?: string;
-      name?: string;
-      password?: string;
-    } = {
-      email: data.email,
-      name: data.name,
-    };
-
-    // Se uma nova senha foi fornecida, fazer hash
     if (data.password) {
-      updateData.password = await bcrypt.hash(data.password, 10);
+      data.password = await bcrypt.hash(data.password, 10);
     }
 
-    await this.prisma.user.update({
-      where: { id },
-      data: updateData,
-    });
-
-    return true;
+    return await this.repository.update(id, data);
   }
 
   async delete(id: string): Promise<boolean> {
-    const user = await this.prisma.user.findUnique({
-      where: { id },
-    });
-
-    if (!user) {
-      throw new NotFoundException('Usuário não encontrado');
-    }
-
-    await this.prisma.user.delete({
-      where: { id },
-    });
-
-    return true;
+    return await this.repository.delete(id);
   }
 
-  async findOne(id: string): Promise<User | null> {
-    const user = await this.prisma.user.findUnique({
-      where: { id },
-    });
-
-    if (!user) {
-      return null;
-    }
-
-    // Retornar sem a senha
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+  async findOne(id: string): Promise<UserSchema | null> {
+    return this.repository.findById(id);
   }
 
   async findByEmail(email: string) {
-    return await this.prisma.user.findUnique({
-      where: { email },
-    });
+    return this.repository.findByEmail(email);
   }
 
-  async findAll(): Promise<User[]> {
-    const users = await this.prisma.user.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
-
-    // Retornar sem as senhas
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    return users.map(({ password, ...user }) => user);
+  async findAll(): Promise<UserSchema[]> {
+    return this.repository.findAll();
   }
 }

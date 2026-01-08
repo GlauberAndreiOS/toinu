@@ -1,4 +1,11 @@
-import { IsEmail, IsString, MinLength, IsOptional } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  MinLength,
+  IsOptional,
+  IsEnum,
+} from 'class-validator';
+import { UserRole } from '@toinu/shared-types';
 
 export class UpdateUserDto {
   @IsOptional()
@@ -13,5 +20,8 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString({ message: 'Nome deve ser uma string' })
   name?: string;
-}
 
+  @IsOptional()
+  @IsEnum(UserRole, { message: 'Role deve ser DRIVER ou PASSENGER' })
+  role?: UserRole;
+}

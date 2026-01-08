@@ -6,6 +6,10 @@ import {
   StyleSheet,
   Dimensions,
   TouchableOpacity,
+  TextStyle,
+  StyleProp,
+  Image,
+  ImageSourcePropType,
 } from 'react-native';
 import { useTheme } from '@contexts/ThemeContext';
 import { useAuth } from '@contexts/AuthContext';
@@ -16,27 +20,29 @@ interface Slide {
   key: string;
   title: string;
   description: string;
-  color: string;
+  justified?: boolean;
+  image: ImageSourcePropType;
 }
 
 const slides: Slide[] = [
   {
     key: '1',
-    title: 'Peça sua viagem',
-    description: 'Escolha origem e destino, veja preço e tempo estimado.',
-    color: '#4F46E5',
+    title: 'Liberdade para escolher o profissional!',
+    description: 'Aqui você vai ver uma lista de profissionais, escolha o que é mais adequado pra você, preço, segurança, atendimento ou até mesmo escolha o seu favorito!',
+    justified: true,
+    image: require('../../../../../assets/images/icon.png'),
   },
   {
     key: '2',
     title: 'Acompanhe em tempo real',
     description: 'Veja a localização do motorista e o trajeto no mapa.',
-    color: '#059669',
+    image: require('../../../../../assets/images/adaptive-icon.png'),
   },
   {
     key: '3',
     title: 'Pague de forma segura',
     description: 'Cartão, PIX ou dinheiro — escolha a opção que preferir.',
-    color: '#D97706',
+    image: require('../../../../../assets/images/splash-icon.png'),
   },
 ];
 
@@ -100,9 +106,22 @@ export default function Carousel({ onGetStarted }: Props) {
         }}
         renderItem={({ item }) => (
           <View style={[dynamicStyles.slide, { width }]}>
-            <View style={[dynamicStyles.heroCircle, { backgroundColor: item.color }]} />
+            <Image
+              source={item.image}
+              style={dynamicStyles.image}
+              resizeMode="contain"
+            />
             <Text style={dynamicStyles.title}>{item.title}</Text>
-            <Text style={dynamicStyles.description}>{item.description}</Text>
+            <Text
+              style={
+                [
+                  dynamicStyles.description,
+                  item.justified ? ({ textAlign: 'justify' } as TextStyle) : null,
+                ] as StyleProp<TextStyle>
+              }
+            >
+              {item.description}
+            </Text>
           </View>
         )}
       />
@@ -125,7 +144,7 @@ export default function Carousel({ onGetStarted }: Props) {
           onPress={handlePrevious}
           disabled={isFirstSlide}
         >
-          <Text style={[dynamicStyles.buttonText, isFirstSlide && dynamicStyles.buttonTextDisabled]}>
+          <Text style={[dynamicStyles.prevButtonText, isFirstSlide && dynamicStyles.buttonTextDisabled]}>
             Anterior
           </Text>
         </TouchableOpacity>
@@ -134,7 +153,7 @@ export default function Carousel({ onGetStarted }: Props) {
           style={[dynamicStyles.button, dynamicStyles.nextButton]}
           onPress={handleNext}
         >
-          <Text style={dynamicStyles.buttonText}>
+          <Text style={dynamicStyles.nextButtonText}>
             {isLastSlide ? 'Começar' : 'Próximo'}
           </Text>
         </TouchableOpacity>
@@ -158,16 +177,10 @@ const createDynamicStyles = (theme: any) =>
       justifyContent: 'center',
       paddingHorizontal: 24,
     },
-    heroCircle: {
-      width: 180,
-      height: 180,
-      borderRadius: 90,
+    image: {
+      width: 200,
+      height: 200,
       marginBottom: 48,
-      elevation: 4,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
     },
     title: {
       fontSize: 26,
@@ -231,8 +244,13 @@ const createDynamicStyles = (theme: any) =>
     buttonDisabled: {
       opacity: 0.5,
     },
-    buttonText: {
-      color: theme.colors.background,
+    prevButtonText: {
+      color: theme.colors.text,
+      fontWeight: '600',
+      fontSize: 16,
+    },
+    nextButtonText: {
+      color: theme.mode === 'light' ? theme.colors.background : '#0f172a',
       fontWeight: '600',
       fontSize: 16,
     },
