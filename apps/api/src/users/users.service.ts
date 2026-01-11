@@ -4,23 +4,79 @@ import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersRepository } from './users.repository';
+import { CpfVerificationService } from '../cpf-verification/cpf-verification.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private repository: UsersRepository) {}
+  constructor(
+    private repository: UsersRepository,
+    private cpfVerificationService: CpfVerificationService,
+  ) {}
 
   async create(data: CreateUserDto): Promise<UserSchema> {
     const hashedPassword = await bcrypt.hash(data.password, 10);
     const { role, ...userData } = data;
 
-    return this.repository.create({
-      ...userData,
+    const {
+      fullName,
+      birthDate,
+      cpf,
+      phone,
+      emailContact,
+      cnh,
+      cnhExpiration,
+      address,
+      vehicle,
+      ...baseUserData
+    } = userData;
+
+    const user = (await this.repository.create({
+      ...baseUserData,
       password: hashedPassword,
-      role,
+      phone: phone,
       ...(role === 'DRIVER'
-        ? { driver: { create: {} } }
-        : { passenger: { create: {} } }),
-    });
+        ? {
+            driver: {
+              create: {
+                fullName: fullName || '',
+                birthDate: birthDate ? new Date(birthDate) : new Date(),
+                cpf: cpf || '',
+                phoneContact: phone,
+                emailContact: emailContact,
+                cnh: cnh || '',
+                cnhExpiration: cnhExpiration
+                  ? new Date(cnhExpiration)
+                  : new Date(),
+                address: address as any,
+                ...(vehicle
+                  ? {
+                      vehicles: {
+                        create: vehicle,
+                      },
+                    }
+                  : {}),
+              },
+            },
+          }
+        : {
+            passenger: {
+              create: {
+                fullName: fullName || '',
+                cpf: cpf || '',
+                birthDate: birthDate ? new Date(birthDate) : new Date(),
+                phoneContact: phone,
+                address: address as any,
+              },
+            },
+          }),
+    })) as any;
+
+    // Se for passageiro, dispara a verificação de CPF em "background"
+    if (role === 'PASSENGER' && user.passenger) {
+      this.cpfVerificationService.verifyPassengerCpf(user.passenger.id);
+    }
+
+    return user;
   }
 
   async update(id: string, data: UpdateUserDto): Promise<boolean> {

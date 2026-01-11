@@ -1,14 +1,11 @@
 import React, { useState, useCallback, memo } from 'react';
-import {
-  View,
-  TouchableOpacity,
-  StyleSheet,
-  Platform
-} from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { TripScreen } from './Trip/TripScreen';
+import { PassengersHomeScreen } from './Passengers';
+import { DriversHomeScreen } from './Drivers';
 import { ProfileScreen } from './ProfileScreen';
+import { useAuth } from '../../../contexts/AuthContext';
 
 type TabType = 'trips' | 'explore' | 'favorites' | 'profile';
 
@@ -24,26 +21,26 @@ const TABS: readonly TabItem[] = [
     id: 'trips',
     label: 'Viagens',
     icon: 'receipt-outline',
-    activeIcon: 'receipt'
+    activeIcon: 'receipt',
   },
   {
     id: 'explore',
     label: 'Explorar',
     icon: 'compass-outline',
-    activeIcon: 'compass'
+    activeIcon: 'compass',
   },
   {
     id: 'favorites',
     label: 'Favoritos',
     icon: 'heart-outline',
-    activeIcon: 'heart'
+    activeIcon: 'heart',
   },
   {
     id: 'profile',
     label: 'Perfil',
     icon: 'person-outline',
-    activeIcon: 'person'
-  }
+    activeIcon: 'person',
+  },
 ];
 
 interface TabButtonProps {
@@ -72,10 +69,19 @@ interface ScreenProps {
   readonly key: string;
 }
 
-const renderScreen = (activeTab: TabType, onProfilePress: () => void): React.ReactNode => {
+const renderScreen = (
+  activeTab: TabType,
+  onProfilePress: () => void,
+  userRole: 'DRIVER' | 'PASSENGER',
+): React.ReactNode => {
   switch (activeTab) {
     case 'trips':
-      return <TripScreen key="trips" onProfilePress={onProfilePress} />;
+      if (userRole === 'DRIVER') {
+        return <DriversHomeScreen key="trips" />;
+      }
+      return (
+        <PassengersHomeScreen key="trips" onProfilePress={onProfilePress} />
+      );
     case 'explore':
       return (
         <View style={styles.placeholderScreen} key="explore">
@@ -96,6 +102,7 @@ const renderScreen = (activeTab: TabType, onProfilePress: () => void): React.Rea
 };
 
 export function AuthenticatedLayout() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('trips');
 
   const handleTabPress = useCallback((tab: TabType) => {
@@ -109,7 +116,7 @@ export function AuthenticatedLayout() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.screenContainer}>
-        {renderScreen(activeTab, handleProfilePress)}
+        {renderScreen(activeTab, handleProfilePress, user?.role || 'PASSENGER')}
       </View>
 
       {/* Bottom Tab Bar */}
@@ -130,10 +137,10 @@ export function AuthenticatedLayout() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB'
+    backgroundColor: '#F9FAFB',
   },
   screenContainer: {
-    flex: 1
+    flex: 1,
   },
   tabBar: {
     flexDirection: 'row',
@@ -142,11 +149,11 @@ const styles = StyleSheet.create({
     borderTopColor: '#E5E7EB',
     height: Platform.select({
       ios: 80,
-      android: 70
+      android: 70,
     }),
     paddingBottom: Platform.select({
       ios: 20,
-      android: 10
+      android: 10,
     }),
     paddingHorizontal: 12,
     justifyContent: 'space-around',
@@ -155,7 +162,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
-    elevation: 4
+    elevation: 4,
   },
   tabButton: {
     width: 48,
@@ -163,13 +170,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 12,
-    backgroundColor: 'transparent'
+    backgroundColor: 'transparent',
   },
   placeholderScreen: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB'
-  }
+    backgroundColor: '#F9FAFB',
+  },
 });
-

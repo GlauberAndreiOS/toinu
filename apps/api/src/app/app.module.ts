@@ -6,6 +6,10 @@ import { UsersModule } from '../users/users.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { DriversModule } from '../drivers/drivers.module';
 import { PassengersModule } from '../passengers/passengers.module';
+import { VehiclesModule } from '../vehicles/vehicles.module';
+import { FavoriteAddressesModule } from '../favorite-addresses/favorite-addresses.module';
+import { TripsModule } from '../trips/trips.module';
+import { CpfVerificationModule } from '../cpf-verification/cpf-verification.module';
 
 @Module({
   imports: [
@@ -14,6 +18,10 @@ import { PassengersModule } from '../passengers/passengers.module';
     UsersModule,
     DriversModule,
     PassengersModule,
+    VehiclesModule,
+    FavoriteAddressesModule,
+    TripsModule,
+    CpfVerificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

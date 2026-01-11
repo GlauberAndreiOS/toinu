@@ -1,19 +1,56 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { authApi, AuthResponse } from '@services/api';
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-}
+import { authApi, AuthResponse } from '../services/api';
+import { User } from '@toinu/shared-types';
 
 interface AuthContextData {
   user: User | null;
   token: string | null;
   loading: boolean;
-  login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
+  login: (
+    email: string,
+    password: string,
+    rememberMe?: boolean,
+  ) => Promise<void>;
+  register: (
+    email: string,
+    password: string,
+    fullName: string,
+    role?: 'DRIVER' | 'PASSENGER',
+    driverData?: {
+      fullName: string;
+      birthDate: string;
+      cpf: string;
+      phone: string;
+      email: string;
+      cnh: string;
+      cnhExpiration: string;
+      address: {
+        street: string;
+        number: string;
+        complement?: string;
+        neighborhood: string;
+        city: string;
+        state: string;
+        zipCode: string;
+      };
+      vehicle?: {
+        brand: string;
+        model: string;
+        yearOfManufacture: number;
+        yearOfModel: number;
+        renavam: string;
+        licensePlate: string;
+        color: string;
+      };
+    },
+  ) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   savedEmail: string | null;
@@ -24,7 +61,9 @@ interface AuthContextData {
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -61,7 +100,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const login = async (email: string, password: string, rememberMe: boolean = false) => {
+  const login = async (email: string, password: string, rememberMe = false) => {
     try {
       const response: AuthResponse = await authApi.login({ email, password });
 
@@ -83,9 +122,47 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const register = async (email: string, password: string, name: string) => {
+  const register = async (
+    email: string,
+    password: string,
+    fullName: string,
+    role: 'DRIVER' | 'PASSENGER' = 'PASSENGER',
+    driverData?: {
+      fullName: string;
+      birthDate: string;
+      cpf: string;
+      phone: string;
+      email: string;
+      cnh: string;
+      cnhExpiration: string;
+      address: {
+        street: string;
+        number: string;
+        complement?: string;
+        neighborhood: string;
+        city: string;
+        state: string;
+        zipCode: string;
+      };
+      vehicle?: {
+        brand: string;
+        model: string;
+        yearOfManufacture: number;
+        yearOfModel: number;
+        renavam: string;
+        licensePlate: string;
+        color: string;
+      };
+    },
+  ) => {
     try {
-      const response: AuthResponse = await authApi.register({ email, password, name });
+      const response: AuthResponse = await authApi.register({
+        email,
+        password,
+        fullName,
+        role,
+        ...driverData,
+      });
 
       await AsyncStorage.setItem('@auth_token', response.access_token);
       await AsyncStorage.setItem('@auth_user', JSON.stringify(response.user));
@@ -146,4 +223,3 @@ export const useAuth = () => {
   }
   return context;
 };
-

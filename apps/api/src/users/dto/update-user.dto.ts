@@ -18,8 +18,8 @@ export class UpdateUserDto {
   password?: string;
 
   @IsOptional()
-  @IsString({ message: 'Nome deve ser uma string' })
-  name?: string;
+  @IsString({ message: 'Nome completo deve ser uma string' })
+  fullName?: string;
 
   @IsOptional()
   @IsEnum(UserRole, { message: 'Role deve ser DRIVER ou PASSENGER' })

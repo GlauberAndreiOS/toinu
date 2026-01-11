@@ -9,6 +9,18 @@ export class UsersRepository {
   async create(data: Prisma.UserCreateInput): Promise<UserSchema> {
     return this.prisma.user.create({
       data,
+      include: {
+        driver: {
+          include: {
+            vehicles: true,
+          },
+        },
+        passenger: {
+          include: {
+            favoriteAddresses: true,
+          },
+        },
+      },
     });
   }
 
@@ -31,8 +43,16 @@ export class UsersRepository {
     return this.prisma.user.findUnique({
       where: { id },
       include: {
-        driver: true,
-        passenger: true,
+        driver: {
+          include: {
+            vehicles: true,
+          },
+        },
+        passenger: {
+          include: {
+            favoriteAddresses: true,
+          },
+        },
       },
     });
   }
@@ -41,8 +61,16 @@ export class UsersRepository {
     return this.prisma.user.findUnique({
       where: { email },
       include: {
-        driver: true,
-        passenger: true,
+        driver: {
+          include: {
+            vehicles: true,
+          },
+        },
+        passenger: {
+          include: {
+            favoriteAddresses: true,
+          },
+        },
       },
     });
   }
@@ -51,8 +79,16 @@ export class UsersRepository {
     return this.prisma.user.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
-        driver: true,
-        passenger: true,
+        driver: {
+          include: {
+            vehicles: true,
+          },
+        },
+        passenger: {
+          include: {
+            favoriteAddresses: true,
+          },
+        },
       },
     });
   }

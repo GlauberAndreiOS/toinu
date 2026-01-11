@@ -12,6 +12,7 @@ export class DriversRepository {
       include: {
         user: true,
         trips: true,
+        vehicles: true,
       },
     });
   }
@@ -20,6 +21,7 @@ export class DriversRepository {
     return this.prisma.driver.findMany({
       include: {
         user: true,
+        vehicles: true,
       },
     });
   }

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { User } from '@toinu/shared-types';
 
 /**
  * Configuração da API baseada no ambiente
@@ -20,7 +21,10 @@ const logger = {
     console.warn(`[${tag}] ⚠ ${message}`, data ? data : '');
   },
   debug: (tag: string, message: string, data?: any) => {
-    console.log(`[${tag}] 🔍 ${message}`, data ? JSON.stringify(data, null, 2) : '');
+    console.log(
+      `[${tag}] 🔍 ${message}`,
+      data ? JSON.stringify(data, null, 2) : '',
+    );
   },
 };
 
@@ -63,7 +67,7 @@ api.interceptors.request.use(
   (error) => {
     logger.error('REQUEST', 'Erro no interceptor de requisição', error);
     return Promise.reject(error);
-  }
+  },
 );
 
 // Interceptor para tratar erros
@@ -97,7 +101,11 @@ api.interceptors.response.use(
         await AsyncStorage.removeItem('@auth_user');
         logger.info('AUTH', 'Dados de autenticação removidos do AsyncStorage');
       } catch (storageError) {
-        logger.error('AUTH', 'Erro ao remover dados do AsyncStorage', storageError);
+        logger.error(
+          'AUTH',
+          'Erro ao remover dados do AsyncStorage',
+          storageError,
+        );
       }
     }
 
@@ -115,7 +123,7 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export interface LoginDto {
@@ -126,16 +134,38 @@ export interface LoginDto {
 export interface CreateUserDto {
   email: string;
   password: string;
-  name: string;
+  fullName: string;
+  role?: 'DRIVER' | 'PASSENGER';
+  // Driver fields
+  birthDate?: string;
+  cpf?: string;
+  phone?: string;
+  emailContact?: string;
+  cnh?: string;
+  cnhExpiration?: string;
+  address?: {
+    street: string;
+    number: string;
+    complement?: string;
+    neighborhood: string;
+    city: string;
+    state: string;
+    zipCode: string;
+  };
+  vehicle?: {
+    brand: string;
+    model: string;
+    yearOfManufacture: number;
+    yearOfModel: number;
+    renavam: string;
+    licensePlate: string;
+    color: string;
+  };
 }
 
 export interface AuthResponse {
   access_token: string;
-  user: {
-    id: string;
-    email: string;
-    name: string;
-  };
+  user: User;
 }
 
 export const authApi = {
@@ -145,7 +175,7 @@ export const authApi = {
       const response = await api.post<AuthResponse>('/auth/login', data);
       logger.info('AUTH', 'Login bem-sucedido', {
         userId: response.data.user.id,
-        userName: response.data.user.name,
+        userName: response.data.user.email,
       });
       return response.data;
     } catch (error) {
@@ -156,11 +186,14 @@ export const authApi = {
 
   register: async (data: CreateUserDto): Promise<AuthResponse> => {
     try {
-      logger.info('AUTH', 'Iniciando registro', { email: data.email, name: data.name });
+      logger.info('AUTH', 'Iniciando registro', {
+        email: data.email,
+        fullName: data.fullName,
+      });
       const response = await api.post<AuthResponse>('/auth/register', data);
       logger.info('AUTH', 'Registro bem-sucedido', {
         userId: response.data.user.id,
-        userName: response.data.user.name,
+        userName: response.data.user.email,
       });
       return response.data;
     } catch (error) {
@@ -183,4 +216,3 @@ export const authApi = {
 };
 
 export default api;
-

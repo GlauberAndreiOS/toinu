@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
 import { StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
-import { ThemeProvider, useTheme } from '@contexts/ThemeContext';
-import { AuthProvider, useAuth } from '@contexts/AuthContext';
-import { HomeScreen, LoginScreen, RegisterScreen } from '@screens/Unauthenticated';
-import { AuthenticatedLayout } from '@screens/Authenticated';
+import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
+import { AuthProvider, useAuth } from '../contexts/AuthContext';
+import { PassengerStatus } from '@toinu/shared-types';
+import {
+  HomeScreen,
+  LoginScreen,
+  RegisterScreen,
+} from './screens/Unauthenticated';
+import { AuthenticatedLayout } from './screens/Authenticated/AuthenticatedLayout';
+import { VerificationPendingScreen } from './screens/Authenticated/VerificationPendingScreen';
 
 type UnauthenticatedScreen = 'home' | 'login' | 'register';
 
@@ -18,7 +24,7 @@ interface AppState {
  */
 function AppContent() {
   const { theme } = useTheme();
-  const { isAuthenticated, logout, hasSeenCarousel, loading } = useAuth();
+  const { isAuthenticated, user, loading, hasSeenCarousel } = useAuth();
   const [appState, setAppState] = useState<AppState>({
     unauthenticatedScreen: 'home',
   });
@@ -70,6 +76,7 @@ function AppContent() {
           <RegisterScreen
             navigation={{
               navigate: handleNavigateToLogin,
+              goBack: handleNavigateToLogin,
             }}
           />
         );
@@ -80,6 +87,11 @@ function AppContent() {
   };
 
   const renderAuthenticatedScreen = () => {
+    // Se for passageiro e não estiver verificado, mostra a tela de pendência
+    if (user?.passenger && user.passenger.status !== PassengerStatus.VERIFIED) {
+      return <VerificationPendingScreen />;
+    }
+
     return <AuthenticatedLayout />;
   };
 
@@ -88,7 +100,9 @@ function AppContent() {
       style={[styles.safeArea, { backgroundColor: theme.colors.background }]}
       edges={['top', 'bottom']}
     >
-      {isAuthenticated ? renderAuthenticatedScreen() : renderUnauthenticatedScreen()}
+      {isAuthenticated
+        ? renderAuthenticatedScreen()
+        : renderUnauthenticatedScreen()}
     </SafeAreaView>
   );
 }
@@ -99,11 +113,13 @@ function AppContent() {
  */
 export default function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
 

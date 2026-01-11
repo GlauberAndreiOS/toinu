@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
-  type GestureResponderEvent
+  type GestureResponderEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -71,81 +71,89 @@ const TripCard = memo(({ trip }: TripCardProps) => (
 
 TripCard.displayName = 'TripCard';
 
-interface TripScreenProps {
+interface PassengersHomeScreenProps {
   readonly onProfilePress?: () => void;
 }
 
-export function TripScreen({ onProfilePress }: TripScreenProps) {
+export function PassengersHomeScreen({
+  onProfilePress,
+}: PassengersHomeScreenProps) {
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
-  const upcomingTrips = useMemo((): readonly Trip[] => [
-    {
-      id: 1,
-      type: 'bus',
-      from: 'Estação Centro',
-      to: 'Terminal do Aeroporto 2',
-      date: 'Hoje',
-      time: '14:30',
-      duration: '45 min',
-      price: 'R$ 12,50',
-      icon: 'bus-outline',
-      color: '#3B82F6'
-    },
-    {
-      id: 2,
-      type: 'train',
-      from: 'Estação Central',
-      to: 'Zona Oeste',
-      date: 'Amanhã',
-      time: '09:00',
-      duration: '25 min',
-      price: 'R$ 8,00',
-      icon: 'train-outline',
-      color: '#10B981'
-    },
-    {
-      id: 3,
-      type: 'bike',
-      from: 'Avenida do Parque',
-      to: 'Centro da Cidade',
-      date: '5 de jan',
-      time: '11:00',
-      duration: '15 min',
-      price: 'R$ 3,00',
-      icon: 'bicycle-outline',
-      color: '#8B5CF6'
-    }
-  ], []);
+  const upcomingTrips = useMemo(
+    (): readonly Trip[] => [
+      {
+        id: 1,
+        type: 'bus',
+        from: 'Estação Centro',
+        to: 'Terminal do Aeroporto 2',
+        date: 'Hoje',
+        time: '14:30',
+        duration: '45 min',
+        price: 'R$ 12,50',
+        icon: 'bus-outline',
+        color: '#3B82F6',
+      },
+      {
+        id: 2,
+        type: 'train',
+        from: 'Estação Central',
+        to: 'Zona Oeste',
+        date: 'Amanhã',
+        time: '09:00',
+        duration: '25 min',
+        price: 'R$ 8,00',
+        icon: 'train-outline',
+        color: '#10B981',
+      },
+      {
+        id: 3,
+        type: 'bike',
+        from: 'Avenida do Parque',
+        to: 'Centro da Cidade',
+        date: '5 de jan',
+        time: '11:00',
+        duration: '15 min',
+        price: 'R$ 3,00',
+        icon: 'bicycle-outline',
+        color: '#8B5CF6',
+      },
+    ],
+    [],
+  );
 
-  const pastTrips = useMemo((): readonly Trip[] => [
-    {
-      id: 4,
-      type: 'bus',
-      from: 'Casa',
-      to: 'Escritório',
-      date: 'Ontem',
-      time: '08:30',
-      duration: '30 min',
-      price: 'R$ 10,00',
-      icon: 'bus-outline',
-      color: '#3B82F6'
-    },
-    {
-      id: 5,
-      type: 'train',
-      from: 'Shopping',
-      to: 'Centro',
-      date: '1 de jan',
-      time: '17:00',
-      duration: '20 min',
-      price: 'R$ 7,50',
-      icon: 'train-outline',
-      color: '#10B981'
-    }
-  ], []);
+  const pastTrips = useMemo(
+    (): readonly Trip[] => [
+      {
+        id: 4,
+        type: 'bus',
+        from: 'Casa',
+        to: 'Escritório',
+        date: 'Ontem',
+        time: '08:30',
+        duration: '30 min',
+        price: 'R$ 10,00',
+        icon: 'bus-outline',
+        color: '#3B82F6',
+      },
+      {
+        id: 5,
+        type: 'train',
+        from: 'Shopping',
+        to: 'Centro',
+        date: '1 de jan',
+        time: '17:00',
+        duration: '20 min',
+        price: 'R$ 7,50',
+        icon: 'train-outline',
+        color: '#10B981',
+      },
+    ],
+    [],
+  );
 
   const trips = useMemo(
     () => (activeTab === 'upcoming' ? upcomingTrips : pastTrips),
-    [activeTab, upcomingTrips, pastTrips]
+    [activeTab, upcomingTrips, pastTrips],
   );
 
   const handleTabChange = useCallback((tab: 'upcoming' | 'past') => {
@@ -169,7 +177,10 @@ export function TripScreen({ onProfilePress }: TripScreenProps) {
             <TouchableOpacity style={styles.headerButton}>
               <Ionicons name="settings-outline" size={20} color="#FFFFFF" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.headerButton} onPress={handleProfilePress}>
+            <TouchableOpacity
+              style={styles.headerButton}
+              onPress={handleProfilePress}
+            >
               <Ionicons name="person-outline" size={20} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
@@ -208,16 +219,28 @@ export function TripScreen({ onProfilePress }: TripScreenProps) {
           style={styles.tab}
           onPress={() => handleTabChange('upcoming')}
         >
-          <Text style={[styles.tabText, activeTab === 'upcoming' && styles.activeTabText]}>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === 'upcoming' && styles.activeTabText,
+            ]}
+          >
             Próximas
           </Text>
-          {activeTab === 'upcoming' && <View style={styles.activeTabIndicator} />}
+          {activeTab === 'upcoming' && (
+            <View style={styles.activeTabIndicator} />
+          )}
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.tab}
           onPress={() => handleTabChange('past')}
         >
-          <Text style={[styles.tabText, activeTab === 'past' && styles.activeTabText]}>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === 'past' && styles.activeTabText,
+            ]}
+          >
             Passadas
           </Text>
           {activeTab === 'past' && <View style={styles.activeTabIndicator} />}
@@ -225,7 +248,10 @@ export function TripScreen({ onProfilePress }: TripScreenProps) {
       </View>
 
       {/* Trip List */}
-      <ScrollView style={styles.tripList} contentContainerStyle={styles.tripListContent}>
+      <ScrollView
+        style={styles.tripList}
+        contentContainerStyle={styles.tripListContent}
+      >
         {trips.map((trip) => (
           <TripCard key={trip.id} trip={trip} />
         ))}
@@ -242,33 +268,33 @@ export function TripScreen({ onProfilePress }: TripScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB'
+    backgroundColor: '#F9FAFB',
   },
   header: {
     backgroundColor: '#4F46E5',
     paddingHorizontal: 24,
     paddingTop: 16,
-    paddingBottom: 24
+    paddingBottom: 24,
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 24
+    marginBottom: 24,
   },
   greeting: {
     fontSize: 14,
     color: '#C7D2FE',
-    marginBottom: 4
+    marginBottom: 4,
   },
   userName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFFFFF'
+    color: '#FFFFFF',
   },
   headerButtons: {
     flexDirection: 'row',
-    gap: 12
+    gap: 12,
   },
   headerButton: {
     width: 40,
@@ -276,7 +302,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   searchCard: {
     backgroundColor: '#FFFFFF',
@@ -286,22 +312,22 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 4
+    elevation: 4,
   },
   searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
-    gap: 12
+    gap: 12,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#111827'
+    color: '#111827',
   },
   transportButtons: {
     flexDirection: 'row',
-    gap: 8
+    gap: 8,
   },
   transportButton: {
     flexDirection: 'row',
@@ -310,32 +336,32 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     backgroundColor: '#EEF2FF',
     borderRadius: 8,
-    gap: 8
+    gap: 8,
   },
   transportButtonText: {
     fontSize: 14,
     color: '#4F46E5',
-    fontWeight: '600'
+    fontWeight: '600',
   },
   tabsContainer: {
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
-    paddingHorizontal: 24
+    paddingHorizontal: 24,
   },
   tab: {
     paddingVertical: 16,
     marginRight: 32,
-    position: 'relative'
+    position: 'relative',
   },
   tabText: {
     fontSize: 16,
-    color: '#6B7280'
+    color: '#6B7280',
   },
   activeTabText: {
     color: '#4F46E5',
-    fontWeight: '600'
+    fontWeight: '600',
   },
   activeTabIndicator: {
     position: 'absolute',
@@ -343,14 +369,14 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 2,
-    backgroundColor: '#4F46E5'
+    backgroundColor: '#4F46E5',
   },
   tripList: {
-    flex: 1
+    flex: 1,
   },
   tripListContent: {
     padding: 24,
-    gap: 16
+    gap: 16,
   },
   tripCard: {
     backgroundColor: '#FFFFFF',
@@ -361,56 +387,56 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
-    elevation: 2
+    elevation: 2,
   },
   tripContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16
+    gap: 16,
   },
   tripIcon: {
     width: 48,
     height: 48,
     borderRadius: 12,
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   tripDetails: {
-    flex: 1
+    flex: 1,
   },
   tripRoute: {
-    marginBottom: 12
+    marginBottom: 12,
   },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 4
+    marginBottom: 4,
   },
   locationText: {
     fontSize: 14,
     color: '#111827',
-    flex: 1
+    flex: 1,
   },
   tripMeta: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16
+    gap: 16,
   },
   metaItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4
+    gap: 4,
   },
   metaText: {
     fontSize: 12,
-    color: '#6B7280'
+    color: '#6B7280',
   },
   priceText: {
     marginLeft: 'auto',
     fontSize: 14,
     fontWeight: '600',
-    color: '#4F46E5'
+    color: '#4F46E5',
   },
   fab: {
     position: 'absolute',
@@ -426,6 +452,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
-    elevation: 8
-  }
+    elevation: 8,
+  },
 });

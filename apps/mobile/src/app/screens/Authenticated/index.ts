@@ -1,5 +1,4 @@
 export { ProfileScreen } from './ProfileScreen';
 export { AuthenticatedLayout } from './AuthenticatedLayout';
-export { TripScreen } from './Trip/TripScreen';
-
-
+export * from './Drivers';
+export * from './Passengers';
