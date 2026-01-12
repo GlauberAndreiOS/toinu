@@ -38,39 +38,60 @@ enum CpfVerificationStatus {
 model User {
   id                String   @id @default(uuid())
 
+  // Credenciais e Auth
   email             String?  @unique
   phone             String?  @unique
   password          String?
   oauthProvider     String?
   oauthProviderId   String?
 
+  // Dados Pessoais Centralizados
+  fullName          String?
+  birthDate         DateTime?
+  cpf               String?  @unique @db.VarChar(14)
+  address           Json?
+
+  // Metadados
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
+  // Relacionamentos de Perfil (One-to-One)
   driver            Driver?
   passenger         Passenger?
 
   @@map("users")
 }
 
+model Passenger {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Campos específicos de Passageiro
+  status            PassengerStatus @default(PENDING_VERIFICATION)
+  cpfVerified       Boolean         @default(false)
+  cpfVerifiedAt     DateTime?
+
+  trips             Trip[]
+  cpfVerifications  CpfVerification[]
+  favoriteAddresses PassengerFavoriteAddress[]
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("passengers")
+}
+
 model Driver {
   id                String   @id @default(uuid())
   userId            String   @unique
-  user              User     @relation(fields: [userId], references: [id])
-
-  fullName          String
-  birthDate         DateTime
-  cpf               String   @unique @db.VarChar(14)
-
-  phoneContact      String?
-  emailContact      String?
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   cnh               String   @unique
   cnhExpiration     DateTime
-
-  address           Json?
-
   isApproved        Boolean  @default(false)
+
+  activeVehicleId   String?  @unique
 
   vehicles          Vehicle[]
   trips             Trip[]
@@ -104,39 +125,12 @@ model Vehicle {
   @@map("vehicles")
 }
 
-model Passenger {
-  id                String   @id @default(uuid())
-  userId            String   @unique
-  user              User     @relation(fields: [userId], references: [id])
-
-  fullName          String
-  cpf               String   @unique @db.VarChar(14)
-  birthDate         DateTime
-
-  phoneContact      String?
-
-  status            PassengerStatus @default(PENDING_VERIFICATION)
-  cpfVerified       Boolean         @default(false)
-  cpfVerifiedAt     DateTime?
-
-  address           Json?
-
-  trips             Trip[]
-  cpfVerifications  CpfVerification[]
-  favoriteAddresses PassengerFavoriteAddress[]
-
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  @@map("passengers")
-}
-
-model PassengerFavoriteAddress {
+model FavoriteAddress {
   id          String   @id @default(uuid())
-  passengerId String
-  passenger   Passenger @relation(fields: [passengerId], references: [id])
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  label       String   // ex: "Casa", "Trabalho"
+  label       String   // ex: "Casa", "Trabalho", "Academia"
   street      String
   number      String
   complement  String?
@@ -151,7 +145,7 @@ model PassengerFavoriteAddress {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  @@map("passenger_favorite_addresses")
+  @@map("favorite_addresses")
 }
 
 model CpfVerification {

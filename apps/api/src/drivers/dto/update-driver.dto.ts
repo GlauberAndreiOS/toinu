@@ -1,9 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { PartialType } from '@nestjs/mapped-types';
+import { CreateDriverDto } from './create-driver.dto';
 
-export class UpdateDriverDto {
-  // Por enquanto, não temos campos extras no Driver além do vínculo com User,
-  // mas deixamos o DTO pronto para futuras expansões (ex: placa do carro, CNH).
-  @IsOptional()
-  @IsString()
-  placeholder?: string;
-}
+export class UpdateDriverDto extends PartialType(CreateDriverDto) {}

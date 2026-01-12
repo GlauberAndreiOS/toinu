@@ -1,73 +1,47 @@
 import {
   IsEmail,
-  IsEnum,
   IsOptional,
   IsString,
   MinLength,
+  IsDateString,
+  IsObject,
+  ValidateNested,
 } from 'class-validator';
-import { UserRole } from '@toinu/shared-types';
+import { Type } from 'class-transformer';
+
+export class AddressDto {
+  @IsString() street: string;
+  @IsString() number: string;
+  @IsOptional() @IsString() complement?: string;
+  @IsString() neighborhood: string;
+  @IsString() city: string;
+  @IsString() state: string;
+  @IsString() zipCode: string;
+}
 
 export class CreateUserDto {
-  @IsEmail({}, { message: 'Email deve ser um endereço de email válido' })
+  @IsEmail({}, { message: 'Email inválido' })
   email: string;
 
-  @IsString({ message: 'Senha deve ser uma string' })
-  @MinLength(6, { message: 'Senha deve ter no mínimo 6 caracteres' })
+  @IsString()
+  @MinLength(6, { message: 'Senha curta demais' })
   password: string;
 
-  @IsOptional()
-  @IsString({ message: 'Nome completo deve ser uma string' })
-  fullName?: string;
-
-  @IsOptional()
-  @IsEnum(UserRole, { message: 'Role deve ser DRIVER ou PASSENGER' })
-  role?: UserRole;
-
-  // Driver fields
-
-  @IsOptional()
   @IsString()
-  birthDate?: string;
+  fullName: string;
 
-  @IsOptional()
   @IsString()
-  cpf?: string;
+  cpf: string;
 
-  @IsOptional()
   @IsString()
-  phone?: string;
+  phone: string;
+
+  @IsDateString()
+  birthDate: string;
 
   @IsOptional()
-  @IsString()
-  emailContact?: string;
-
-  @IsOptional()
-  @IsString()
-  cnh?: string;
-
-  @IsOptional()
-  @IsString()
-  cnhExpiration?: string;
-
-  @IsOptional()
-  address?: {
-    street: string;
-    number: string;
-    complement?: string;
-    neighborhood: string;
-    city: string;
-    state: string;
-    zipCode: string;
-  };
-
-  @IsOptional()
-  vehicle?: {
-    brand: string;
-    model: string;
-    yearOfManufacture: number;
-    yearOfModel: number;
-    renavam: string;
-    licensePlate: string;
-    color: string;
-  };
+  @IsObject()
+  @ValidateNested()
+  @Type(() => AddressDto)
+  address?: AddressDto;
 }

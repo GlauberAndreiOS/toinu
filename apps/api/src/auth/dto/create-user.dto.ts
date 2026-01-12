@@ -11,4 +11,3 @@ export class CreateUserDto {
   @IsString({ message: 'Nome deve ser uma string' })
   name: string;
 }
-

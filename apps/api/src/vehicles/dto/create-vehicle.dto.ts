@@ -1,8 +1,7 @@
-import { IsNotEmpty, IsNumber, IsString, Length } from 'class-validator';
+import { IsString, IsNotEmpty, IsInt, Min, Max, IsUUID } from 'class-validator';
 
 export class CreateVehicleDto {
-  @IsString()
-  @IsNotEmpty()
+  @IsUUID()
   driverId: string;
 
   @IsString()
@@ -13,17 +12,18 @@ export class CreateVehicleDto {
   @IsNotEmpty()
   model: string;
 
-  @IsNumber()
-  @IsNotEmpty()
+  @IsInt()
+  @Min(1900)
+  @Max(new Date().getFullYear() + 1)
   yearOfManufacture: number;
 
-  @IsNumber()
-  @IsNotEmpty()
+  @IsInt()
+  @Min(1900)
+  @Max(new Date().getFullYear() + 1)
   yearOfModel: number;
 
   @IsString()
   @IsNotEmpty()
-  @Length(9, 11)
   renavam: string;
 
   @IsString()

@@ -1,19 +1,27 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, IsUUID, IsOptional, IsNumber, IsDecimal } from 'class-validator';
 
 export class CreateTripDto {
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'A origem é obrigatória' })
   @IsString()
   origin: string;
 
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'O destino é obrigatório' })
   @IsString()
   destination: string;
 
+  @IsUUID('4', { message: 'ID do passageiro inválido' })
   @IsNotEmpty()
-  @IsString()
   passengerId: string;
 
+  @IsUUID('4', { message: 'ID do motorista inválido' })
   @IsNotEmpty()
-  @IsString()
   driverId: string;
+
+  @IsOptional()
+  @IsNumber()
+  price?: number;
+
+  @IsOptional()
+  @IsNumber()
+  distanceKm?: number;
 }
