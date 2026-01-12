@@ -63,19 +63,19 @@ export const DriverAddressStep: React.FC<DriverAddressStepProps> = ({
         showsVerticalScrollIndicator={false}
       >
         <Text style={[styles.title, { color: theme.colors.text }]}>
-          Endereço
+          Seu Endereço
         </Text>
         <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-          Onde você reside?
+          Precisamos saber onde você atua
         </Text>
 
         <View style={styles.form}>
           <View style={styles.row}>
             <View style={[styles.inputContainer, { flex: 3 }]}>
-              <Text style={labelStyle}>Logradouro</Text>
+              <Text style={labelStyle}>Rua</Text>
               <TextInput
                 style={inputStyle}
-                placeholder="Rua, Av, etc"
+                placeholder="Nome da rua"
                 placeholderTextColor={theme.colors.textSecondary}
                 value={street}
                 onChangeText={setStreet}
@@ -97,7 +97,7 @@ export const DriverAddressStep: React.FC<DriverAddressStepProps> = ({
             <Text style={labelStyle}>Complemento (Opcional)</Text>
             <TextInput
               style={inputStyle}
-              placeholder="Apto, Bloco, etc"
+              placeholder="Apto, Bloco, etc."
               placeholderTextColor={theme.colors.textSecondary}
               value={complement}
               onChangeText={setComplement}
@@ -178,7 +178,6 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     gap: 8,
-    marginBottom: 4,
   },
   row: {
     flexDirection: 'row',

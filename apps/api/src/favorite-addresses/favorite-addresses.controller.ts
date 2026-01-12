@@ -15,7 +15,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PassengerGuard } from '../auth/guards/passenger.guard';
 
 @Controller('favorite-addresses')
-@UseGuards(JwtAuthGuard, PassengerGuard)
+@UseGuards(JwtAuthGuard)
 export class FavoriteAddressesController {
   constructor(private readonly service: FavoriteAddressesService) {}
 

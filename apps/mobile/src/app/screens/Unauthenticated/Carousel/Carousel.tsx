@@ -11,8 +11,9 @@ import {
   Image,
   ImageSourcePropType,
 } from 'react-native';
-import { useTheme } from '@contexts/ThemeContext';
-import { useAuth } from '@contexts/AuthContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from '../../../../contexts/ThemeContext';
+import { useAuth } from '../../../../contexts/AuthContext';
 
 const { width } = Dimensions.get('window');
 
@@ -28,7 +29,8 @@ const slides: Slide[] = [
   {
     key: '1',
     title: 'Liberdade para escolher o profissional!',
-    description: 'Aqui você vai ver uma lista de profissionais, escolha o que é mais adequado pra você, preço, segurança, atendimento ou até mesmo escolha o seu favorito!',
+    description:
+      'Aqui você vai ver uma lista de profissionais, escolha o que é mais adequado pra você, preço, segurança, atendimento ou até mesmo escolha o seu favorito!',
     justified: true,
     image: require('../../../../../assets/images/icon.png'),
   },
@@ -56,10 +58,7 @@ export default function Carousel({ onGetStarted }: Props) {
   const listRef = useRef<FlatList<Slide> | null>(null);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
 
-  const dynamicStyles = useMemo(
-    () => createDynamicStyles(theme),
-    [theme]
-  );
+  const dynamicStyles = useMemo(() => createDynamicStyles(theme), [theme]);
 
   const handleNext = async () => {
     if (currentIndex < slides.length - 1) {
@@ -89,7 +88,7 @@ export default function Carousel({ onGetStarted }: Props) {
   const isFirstSlide = currentIndex === 0;
 
   return (
-    <View style={dynamicStyles.container}>
+    <SafeAreaView style={dynamicStyles.container} edges={['top', 'bottom']}>
       <FlatList
         ref={listRef}
         data={slides}
@@ -99,9 +98,7 @@ export default function Carousel({ onGetStarted }: Props) {
         showsHorizontalScrollIndicator={false}
         keyExtractor={(item) => item.key}
         onMomentumScrollEnd={(e) => {
-          const newIndex = Math.round(
-            e.nativeEvent.contentOffset.x / width
-          );
+          const newIndex = Math.round(e.nativeEvent.contentOffset.x / width);
           setCurrentIndex(newIndex);
         }}
         renderItem={({ item }) => (
@@ -116,7 +113,9 @@ export default function Carousel({ onGetStarted }: Props) {
               style={
                 [
                   dynamicStyles.description,
-                  item.justified ? ({ textAlign: 'justify' } as TextStyle) : null,
+                  item.justified
+                    ? ({ textAlign: 'justify' } as TextStyle)
+                    : null,
                 ] as StyleProp<TextStyle>
               }
             >
@@ -140,11 +139,20 @@ export default function Carousel({ onGetStarted }: Props) {
 
       <View style={dynamicStyles.buttonContainer}>
         <TouchableOpacity
-          style={[dynamicStyles.button, dynamicStyles.prevButton, isFirstSlide && dynamicStyles.buttonDisabled]}
+          style={[
+            dynamicStyles.button,
+            dynamicStyles.prevButton,
+            isFirstSlide && dynamicStyles.buttonDisabled,
+          ]}
           onPress={handlePrevious}
           disabled={isFirstSlide}
         >
-          <Text style={[dynamicStyles.prevButtonText, isFirstSlide && dynamicStyles.buttonTextDisabled]}>
+          <Text
+            style={[
+              dynamicStyles.prevButtonText,
+              isFirstSlide && dynamicStyles.buttonTextDisabled,
+            ]}
+          >
             Anterior
           </Text>
         </TouchableOpacity>
@@ -158,7 +166,7 @@ export default function Carousel({ onGetStarted }: Props) {
           </Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 

@@ -213,6 +213,18 @@ export const authApi = {
       throw error;
     }
   },
+
+  updateProfile: async (id: string, data: any): Promise<boolean> => {
+    try {
+      logger.info('AUTH', 'Atualizando perfil do usuário', { userId: id });
+      const response = await api.post(`/users/${id}`, data);
+      logger.info('AUTH', 'Perfil atualizado com sucesso');
+      return response.data;
+    } catch (error) {
+      logger.error('AUTH', 'Falha ao atualizar perfil', error);
+      throw error;
+    }
+  },
 };
 
 export default api;

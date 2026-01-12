@@ -23,7 +23,7 @@ export const VehicleRegistrationPromptStep: React.FC<
     <View style={[styles.container, { width }]}>
       <Text style={[styles.title, { color: theme.colors.text }]}>Veículo</Text>
       <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-        Deseja cadastrar um veículo agora para começar a dirigir?
+        Você deseja cadastrar seu veículo agora?
       </Text>
 
       <View style={styles.optionsContainer}>
@@ -32,19 +32,19 @@ export const VehicleRegistrationPromptStep: React.FC<
             styles.optionCard,
             {
               backgroundColor: theme.colors.card,
-              borderColor:
-                wantToRegisterVehicle === true
-                  ? theme.colors.primary
-                  : theme.colors.border,
-              borderWidth: wantToRegisterVehicle === true ? 2 : 1,
+              borderColor: theme.colors.border,
+            },
+            wantToRegisterVehicle === true && {
+              borderColor: theme.colors.primary,
+              borderWidth: 2,
             },
           ]}
           onPress={() => setWantToRegisterVehicle(true)}
         >
-          <View style={[styles.iconContainer, { backgroundColor: '#ECFDF5' }]}>
-            <Ionicons name="car" size={32} color="#10B981" />
+          <View style={[styles.iconContainer, { backgroundColor: '#EEF2FF' }]}>
+            <Ionicons name="car" size={32} color={theme.colors.primary} />
           </View>
-          <Text style={[styles.optionTitle, { color: theme.colors.text }]}>
+          <Text style={[styles.optionName, { color: theme.colors.text }]}>
             Sim, cadastrar agora
           </Text>
           <Text
@@ -53,7 +53,7 @@ export const VehicleRegistrationPromptStep: React.FC<
               { color: theme.colors.textSecondary },
             ]}
           >
-            Vou preencher os dados do meu carro agora mesmo
+            Vou preencher os dados do meu carro para começar a atuar
           </Text>
         </TouchableOpacity>
 
@@ -62,19 +62,23 @@ export const VehicleRegistrationPromptStep: React.FC<
             styles.optionCard,
             {
               backgroundColor: theme.colors.card,
-              borderColor:
-                wantToRegisterVehicle === false
-                  ? theme.colors.primary
-                  : theme.colors.border,
-              borderWidth: wantToRegisterVehicle === false ? 2 : 1,
+              borderColor: theme.colors.border,
+            },
+            wantToRegisterVehicle === false && {
+              borderColor: theme.colors.primary,
+              borderWidth: 2,
             },
           ]}
           onPress={() => setWantToRegisterVehicle(false)}
         >
           <View style={[styles.iconContainer, { backgroundColor: '#F3F4F6' }]}>
-            <Ionicons name="time" size={32} color="#6B7280" />
+            <Ionicons
+              name="time-outline"
+              size={32}
+              color={theme.colors.textSecondary}
+            />
           </View>
-          <Text style={[styles.optionTitle, { color: theme.colors.text }]}>
+          <Text style={[styles.optionName, { color: theme.colors.text }]}>
             Depois
           </Text>
           <Text
@@ -83,7 +87,7 @@ export const VehicleRegistrationPromptStep: React.FC<
               { color: theme.colors.textSecondary },
             ]}
           >
-            Quero finalizar meu cadastro e cadastrar o carro mais tarde
+            Quero finalizar meu cadastro profissional primeiro
           </Text>
         </TouchableOpacity>
       </View>
@@ -114,12 +118,8 @@ const styles = StyleSheet.create({
   optionCard: {
     padding: 20,
     borderRadius: 16,
+    borderWidth: 1,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
   },
   iconContainer: {
     width: 64,
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  optionTitle: {
+  optionName: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 4,

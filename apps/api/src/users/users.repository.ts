@@ -32,6 +32,28 @@ export class UsersRepository {
     return count > 0;
   }
 
+  async updateWithNested(
+    id: string,
+    data: Prisma.UserUpdateInput,
+  ): Promise<UserSchema> {
+    return this.prisma.user.update({
+      where: { id },
+      data,
+      include: {
+        driver: {
+          include: {
+            vehicles: true,
+          },
+        },
+        passenger: {
+          include: {
+            favoriteAddresses: true,
+          },
+        },
+      },
+    });
+  }
+
   async delete(id: string): Promise<boolean> {
     const { count } = await this.prisma.user.deleteMany({
       where: { id },

@@ -7,6 +7,7 @@ import {
   Dimensions,
   ScrollView,
 } from 'react-native';
+import { maskPhone, maskDate } from '../../../../utils/masks';
 
 const { width } = Dimensions.get('window');
 
@@ -65,8 +66,9 @@ export const DriverPersonalInfoStep: React.FC<DriverPersonalInfoStepProps> = ({
               placeholder="(00) 00000-0000"
               placeholderTextColor={theme.colors.textSecondary}
               value={phone}
-              onChangeText={setPhone}
+              onChangeText={(text) => setPhone(maskPhone(text))}
               keyboardType="phone-pad"
+              maxLength={15}
             />
           </View>
 
@@ -102,7 +104,9 @@ export const DriverPersonalInfoStep: React.FC<DriverPersonalInfoStepProps> = ({
                 placeholder="DD/MM/AAAA"
                 placeholderTextColor={theme.colors.textSecondary}
                 value={cnhExpiration}
-                onChangeText={setCnhExpiration}
+                onChangeText={(text) => setCnhExpiration(maskDate(text))}
+                keyboardType="numeric"
+                maxLength={10}
               />
             </View>
           </View>

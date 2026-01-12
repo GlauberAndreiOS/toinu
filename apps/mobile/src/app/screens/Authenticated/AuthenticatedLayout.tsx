@@ -114,7 +114,7 @@ export function AuthenticatedLayout() {
   }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.screenContainer}>
         {renderScreen(activeTab, handleProfilePress, user?.role || 'PASSENGER')}
       </View>

@@ -52,6 +52,9 @@ interface AuthContextData {
     },
   ) => Promise<void>;
   logout: () => Promise<void>;
+  updateUser: (data: any) => Promise<void>;
+  refreshProfile: () => Promise<void>;
+  switchRole: (role: 'DRIVER' | 'PASSENGER') => Promise<void>;
   isAuthenticated: boolean;
   savedEmail: string | null;
   clearSavedCredentials: () => Promise<void>;
@@ -181,6 +184,39 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     setUser(null);
   };
 
+  const updateUser = async (data: any) => {
+    if (!user) return;
+    try {
+      await authApi.updateProfile(user.id, data);
+      await refreshProfile();
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || 'Erro ao atualizar perfil',
+      );
+    }
+  };
+
+  const refreshProfile = async () => {
+    try {
+      const updatedUser = await authApi.getProfile();
+      // Mantém a role ativa se já houver uma
+      if (user?.role) {
+        updatedUser.role = user.role;
+      }
+      await AsyncStorage.setItem('@auth_user', JSON.stringify(updatedUser));
+      setUser(updatedUser);
+    } catch (error) {
+      console.error('Erro ao atualizar perfil local:', error);
+    }
+  };
+
+  const switchRole = async (role: 'DRIVER' | 'PASSENGER') => {
+    if (!user) return;
+    const updatedUser = { ...user, role };
+    setUser(updatedUser);
+    await AsyncStorage.setItem('@auth_user', JSON.stringify(updatedUser));
+  };
+
   const clearSavedCredentials = async () => {
     await AsyncStorage.removeItem('@saved_email');
     setSavedEmail(null);
@@ -204,6 +240,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         login,
         register,
         logout,
+        updateUser,
+        refreshProfile,
+        switchRole,
         isAuthenticated: !!token && !!user,
         savedEmail,
         clearSavedCredentials,

@@ -8,14 +8,15 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { useAuth } from '@contexts/AuthContext';
-import { useTheme } from '@contexts/ThemeContext';
-import { authApi } from '@services/api';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useTheme } from '../../../contexts/ThemeContext';
+import { authApi } from '../../../services/api';
+import { DriverRegisterFlowScreen } from './DriverRegisterFlow/DriverRegisterFlowScreen';
 
 interface UserProfile {
   id: string;
   email: string;
-  name: string;
+  fullName: string;
   createdAt?: string;
 }
 
@@ -24,20 +25,18 @@ interface UserProfile {
  * Exibe dados do usuário autenticado e permite logout
  */
 export function ProfileScreen() {
-  const { user, logout, token } = useAuth();
+  const { user, logout, token, switchRole, refreshProfile } = useAuth();
   const { theme } = useTheme();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isRegisteringDriver, setIsRegisteringDriver] = useState(false);
 
-  const dynamicStyles = useMemo(
-    () => createProfileStyles(theme),
-    [theme]
-  );
+  const dynamicStyles = useMemo(() => createProfileStyles(theme), [theme]);
 
   useEffect(() => {
     loadProfile();
-  }, [token]);
+  }, [token, user?.role]); // Recarrega se a role mudar
 
   const loadProfile = async () => {
     try {
@@ -53,12 +52,30 @@ export function ProfileScreen() {
       const profileData = await authApi.getProfile();
       setProfile(profileData);
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || 'Erro ao carregar perfil';
+      const errorMessage =
+        err.response?.data?.message || err.message || 'Erro ao carregar perfil';
       setError(errorMessage);
       console.error('Erro ao carregar perfil:', err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSwitchRole = (newRole: 'DRIVER' | 'PASSENGER') => {
+    const roleName = newRole === 'DRIVER' ? 'Motorista' : 'Passageiro';
+    Alert.alert(
+      'Trocar Perfil',
+      `Deseja alternar para o perfil de ${roleName}?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Trocar',
+          onPress: async () => {
+            await switchRole(newRole);
+          },
+        },
+      ],
+    );
   };
 
   const handleLogout = () => {
@@ -123,16 +140,31 @@ export function ProfileScreen() {
 
   const displayProfile = (profile || user) as UserProfile;
 
+  if (isRegisteringDriver) {
+    return (
+      <DriverRegisterFlowScreen
+        onCancel={() => setIsRegisteringDriver(false)}
+        onSuccess={async () => {
+          setIsRegisteringDriver(false);
+          await refreshProfile();
+          loadProfile();
+        }}
+      />
+    );
+  }
+
   return (
     <ScrollView style={dynamicStyles.container}>
       {/* Header */}
       <View style={dynamicStyles.header}>
         <View style={dynamicStyles.avatarContainer}>
           <Text style={dynamicStyles.avatar}>
-            {displayProfile?.name?.charAt(0).toUpperCase() || '👤'}
+            {displayProfile?.fullName?.charAt(0).toUpperCase() || '👤'}
           </Text>
         </View>
-        <Text style={dynamicStyles.userName}>{displayProfile?.name || 'Usuário'}</Text>
+        <Text style={dynamicStyles.userName}>
+          {displayProfile?.fullName || 'Usuário'}
+        </Text>
         <Text style={dynamicStyles.userEmail}>{displayProfile?.email}</Text>
       </View>
 
@@ -142,7 +174,9 @@ export function ProfileScreen() {
 
         <View style={dynamicStyles.infoItem}>
           <Text style={dynamicStyles.infoLabel}>Nome</Text>
-          <Text style={dynamicStyles.infoValue}>{displayProfile?.name}</Text>
+          <Text style={dynamicStyles.infoValue}>
+            {displayProfile?.fullName}
+          </Text>
         </View>
 
         <View style={dynamicStyles.infoItem}>
@@ -152,7 +186,9 @@ export function ProfileScreen() {
 
         <View style={dynamicStyles.infoItem}>
           <Text style={dynamicStyles.infoLabel}>ID de Usuário</Text>
-          <Text style={dynamicStyles.infoValueMonospace}>{displayProfile?.id}</Text>
+          <Text style={dynamicStyles.infoValueMonospace}>
+            {displayProfile?.id}
+          </Text>
         </View>
 
         {displayProfile?.createdAt && (
@@ -167,6 +203,59 @@ export function ProfileScreen() {
 
       {/* Ações */}
       <View style={dynamicStyles.section}>
+        <Text style={dynamicStyles.sectionTitle}>Ações</Text>
+
+        {/* Botões de Troca de Perfil */}
+        {user?.passenger && user?.role === 'DRIVER' && (
+          <TouchableOpacity
+            style={[
+              dynamicStyles.actionButton,
+              { backgroundColor: theme.colors.primary + '10' },
+            ]}
+            onPress={() => handleSwitchRole('PASSENGER')}
+          >
+            <Text style={dynamicStyles.actionButtonIcon}>👤</Text>
+            <Text
+              style={[
+                dynamicStyles.actionButtonText,
+                { color: theme.colors.primary },
+              ]}
+            >
+              Alternar para Passageiro
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {user?.driver && user?.role === 'PASSENGER' && (
+          <TouchableOpacity
+            style={[
+              dynamicStyles.actionButton,
+              { backgroundColor: '#10B98110' },
+            ]}
+            onPress={() => handleSwitchRole('DRIVER')}
+          >
+            <Text style={dynamicStyles.actionButtonIcon}>🚗</Text>
+            <Text
+              style={[dynamicStyles.actionButtonText, { color: '#059669' }]}
+            >
+              Alternar para Motorista
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Caso não tenha o perfil de motorista ainda */}
+        {!user?.driver && (
+          <TouchableOpacity
+            style={dynamicStyles.actionButton}
+            onPress={() => setIsRegisteringDriver(true)}
+          >
+            <Text style={dynamicStyles.actionButtonIcon}>➕</Text>
+            <Text style={dynamicStyles.actionButtonText}>
+              Tornar-se Motorista
+            </Text>
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity
           style={dynamicStyles.actionButton}
           onPress={loadProfile}
@@ -360,4 +449,3 @@ const createProfileStyles = (theme: any) =>
       color: theme.colors.textSecondary,
     },
   });
-

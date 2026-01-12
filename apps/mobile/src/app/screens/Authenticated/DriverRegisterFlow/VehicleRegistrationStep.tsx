@@ -68,7 +68,7 @@ export const VehicleRegistrationStep: React.FC<
           Dados do Veículo
         </Text>
         <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-          Quase lá! Agora os dados do seu carro
+          Informe os dados do carro que você vai usar
         </Text>
 
         <View style={styles.form}>
@@ -76,7 +76,7 @@ export const VehicleRegistrationStep: React.FC<
             <Text style={labelStyle}>Marca</Text>
             <TextInput
               style={inputStyle}
-              placeholder="Ex: Volkswagen, Ford..."
+              placeholder="Ex: Toyota, Honda..."
               placeholderTextColor={theme.colors.textSecondary}
               value={brand}
               onChangeText={setBrand}
@@ -87,7 +87,7 @@ export const VehicleRegistrationStep: React.FC<
             <Text style={labelStyle}>Modelo</Text>
             <TextInput
               style={inputStyle}
-              placeholder="Ex: Gol, Fiesta..."
+              placeholder="Ex: Corolla, Civic..."
               placeholderTextColor={theme.colors.textSecondary}
               value={model}
               onChangeText={setModel}
@@ -99,47 +99,50 @@ export const VehicleRegistrationStep: React.FC<
               <Text style={labelStyle}>Ano Fabricação</Text>
               <TextInput
                 style={inputStyle}
-                placeholder="2020"
+                placeholder="2022"
                 placeholderTextColor={theme.colors.textSecondary}
                 value={yearOfManufacture}
                 onChangeText={setYearOfManufacture}
                 keyboardType="numeric"
+                maxLength={4}
               />
             </View>
             <View style={[styles.inputContainer, { flex: 1 }]}>
               <Text style={labelStyle}>Ano Modelo</Text>
               <TextInput
                 style={inputStyle}
-                placeholder="2021"
+                placeholder="2023"
                 placeholderTextColor={theme.colors.textSecondary}
                 value={yearOfModel}
                 onChangeText={setYearOfModel}
                 keyboardType="numeric"
+                maxLength={4}
               />
             </View>
           </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={labelStyle}>Placa</Text>
-            <TextInput
-              style={inputStyle}
-              placeholder="ABC1D23"
-              placeholderTextColor={theme.colors.textSecondary}
-              value={licensePlate}
-              onChangeText={setLicensePlate}
-              autoCapitalize="characters"
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={labelStyle}>Cor</Text>
-            <TextInput
-              style={inputStyle}
-              placeholder="Ex: Preto, Branco..."
-              placeholderTextColor={theme.colors.textSecondary}
-              value={color}
-              onChangeText={setColor}
-            />
+          <View style={styles.row}>
+            <View style={[styles.inputContainer, { flex: 1 }]}>
+              <Text style={labelStyle}>Placa</Text>
+              <TextInput
+                style={inputStyle}
+                placeholder="ABC1D23"
+                placeholderTextColor={theme.colors.textSecondary}
+                value={licensePlate}
+                onChangeText={setLicensePlate}
+                autoCapitalize="characters"
+              />
+            </View>
+            <View style={[styles.inputContainer, { flex: 1 }]}>
+              <Text style={labelStyle}>Cor</Text>
+              <TextInput
+                style={inputStyle}
+                placeholder="Preto, Prata..."
+                placeholderTextColor={theme.colors.textSecondary}
+                value={color}
+                onChangeText={setColor}
+              />
+            </View>
           </View>
 
           <View style={styles.inputContainer}>
@@ -180,7 +183,6 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     gap: 8,
-    marginBottom: 4,
   },
   row: {
     flexDirection: 'row',

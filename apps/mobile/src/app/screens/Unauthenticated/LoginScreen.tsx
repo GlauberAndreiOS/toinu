@@ -11,10 +11,11 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Checkbox } from 'expo-checkbox';
-import { useAuth } from '@contexts/AuthContext';
-import { useTheme } from '@contexts/ThemeContext';
-import { PasswordInput } from '@app/components';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useTheme } from '../../../contexts/ThemeContext';
+import { PasswordInput } from '../../components/PasswordInput';
 
 interface LoginScreenProps {
   navigation: any;
@@ -36,10 +37,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     }
   }, [savedEmail]);
 
-  const dynamicStyles = useMemo(
-    () => createLoginStyles(theme),
-    [theme]
-  );
+  const dynamicStyles = useMemo(() => createLoginStyles(theme), [theme]);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -59,75 +57,86 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={dynamicStyles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView
-        contentContainerStyle={dynamicStyles.scrollContent}
-        keyboardShouldPersistTaps="handled"
+    <SafeAreaView style={dynamicStyles.container} edges={['top', 'bottom']}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <View style={dynamicStyles.content}>
-          <Text style={dynamicStyles.title}>Bem-vindo de volta!</Text>
-          <Text style={dynamicStyles.subtitle}>Faça login para continuar</Text>
+        <ScrollView
+          contentContainerStyle={dynamicStyles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={dynamicStyles.content}>
+            <Text style={dynamicStyles.title}>Bem-vindo de volta!</Text>
+            <Text style={dynamicStyles.subtitle}>
+              Faça login para continuar
+            </Text>
 
-          <View style={dynamicStyles.form}>
-            <View style={dynamicStyles.inputContainer}>
-              <Text style={dynamicStyles.label}>Email</Text>
-              <TextInput
-                style={dynamicStyles.input}
-                placeholder="seu@email.com"
-                placeholderTextColor={theme.colors.textSecondary}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
+            <View style={dynamicStyles.form}>
+              <View style={dynamicStyles.inputContainer}>
+                <Text style={dynamicStyles.label}>Email</Text>
+                <TextInput
+                  style={dynamicStyles.input}
+                  placeholder="seu@email.com"
+                  placeholderTextColor={theme.colors.textSecondary}
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
 
-            <View style={dynamicStyles.inputContainer}>
-              <Text style={dynamicStyles.label}>Senha</Text>
-              <PasswordInput
-                placeholder="Sua senha"
-                value={password}
-                onChangeText={setPassword}
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
+              <View style={dynamicStyles.inputContainer}>
+                <Text style={dynamicStyles.label}>Senha</Text>
+                <PasswordInput
+                  placeholder="Sua senha"
+                  value={password}
+                  onChangeText={setPassword}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
 
-            <View style={dynamicStyles.rememberMeContainer}>
-              <Checkbox
-                value={rememberMe}
-                onValueChange={setRememberMe}
-                color={theme.colors.primary}
-              />
-              <Text style={dynamicStyles.rememberMeText}>Lembrar-me</Text>
-            </View>
+              <View style={dynamicStyles.rememberMeContainer}>
+                <Checkbox
+                  value={rememberMe}
+                  onValueChange={setRememberMe}
+                  color={theme.colors.primary}
+                />
+                <Text style={dynamicStyles.rememberMeText}>Lembrar-me</Text>
+              </View>
 
-            <TouchableOpacity
-              style={[dynamicStyles.button, loading && dynamicStyles.buttonDisabled]}
-              onPress={handleLogin}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={dynamicStyles.buttonText}>Entrar</Text>
-              )}
-            </TouchableOpacity>
-
-            <View style={dynamicStyles.registerContainer}>
-              <Text style={dynamicStyles.registerText}>Não tem uma conta? </Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-                <Text style={dynamicStyles.registerLink}>Cadastre-se</Text>
+              <TouchableOpacity
+                style={[
+                  dynamicStyles.button,
+                  loading && dynamicStyles.buttonDisabled,
+                ]}
+                onPress={handleLogin}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={dynamicStyles.buttonText}>Entrar</Text>
+                )}
               </TouchableOpacity>
+
+              <View style={dynamicStyles.registerContainer}>
+                <Text style={dynamicStyles.registerText}>
+                  Não tem uma conta?{' '}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('Register')}
+                >
+                  <Text style={dynamicStyles.registerLink}>Cadastre-se</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
@@ -219,4 +228,3 @@ const createLoginStyles = (theme: any) =>
       fontWeight: '600',
     },
   });
-

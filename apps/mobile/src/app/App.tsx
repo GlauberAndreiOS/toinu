@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { StyleSheet } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet, View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
@@ -34,7 +34,7 @@ function AppContent() {
     if (!loading) {
       setAppState((prev) => ({
         ...prev,
-        unauthenticatedScreen: !hasSeenCarousel ? 'login' : 'home',
+        unauthenticatedScreen: hasSeenCarousel ? 'login' : 'home',
       }));
     }
   }, [hasSeenCarousel, loading]);
@@ -92,18 +92,29 @@ function AppContent() {
       return <VerificationPendingScreen />;
     }
 
+    // Se o usuário logou mas não tem nenhum perfil, ele precisa terminar o cadastro
+    if (!user?.passenger && !user?.driver) {
+      return (
+        <RegisterScreen
+          navigation={{
+            navigate: handleNavigateToLogin,
+            goBack: handleNavigateToLogin,
+          }}
+        />
+      );
+    }
+
     return <AuthenticatedLayout />;
   };
 
   return (
-    <SafeAreaView
+    <View
       style={[styles.safeArea, { backgroundColor: theme.colors.background }]}
-      edges={['top', 'bottom']}
     >
       {isAuthenticated
         ? renderAuthenticatedScreen()
         : renderUnauthenticatedScreen()}
-    </SafeAreaView>
+    </View>
   );
 }
 

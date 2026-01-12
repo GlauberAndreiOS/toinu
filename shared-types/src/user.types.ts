@@ -27,12 +27,14 @@ export enum CpfVerificationStatus {
 export interface User {
   id: string;
   email?: string;
+  fullName?: string; // Adicionado para facilitar exibição
   phone?: string;
   password?: string;
   oauthProvider?: string;
   oauthProviderId?: string;
   createdAt?: string;
   updatedAt?: string;
+  role?: UserRole; // Adicionado para rastrear o papel ativo no frontend
   driver?: Driver;
   passenger?: Passenger;
 }

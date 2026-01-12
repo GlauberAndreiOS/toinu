@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TextInput, StyleSheet, Dimensions } from 'react-native';
 import { PasswordInput } from '../../../components/PasswordInput';
+import { maskCpf, maskDate } from '../../../../utils/masks';
 
 const { width } = Dimensions.get('window');
 
@@ -16,6 +17,7 @@ interface BasicInfoStepProps {
   password: string;
   setPassword: (password: string) => void;
   theme: any;
+  isAuthenticated?: boolean;
 }
 
 export const BasicInfoStep: React.FC<BasicInfoStepProps> = ({
@@ -30,14 +32,17 @@ export const BasicInfoStep: React.FC<BasicInfoStepProps> = ({
   password,
   setPassword,
   theme,
+  isAuthenticated,
 }) => {
   return (
     <View style={[styles.container, { width }]}>
       <Text style={[styles.title, { color: theme.colors.text }]}>
-        Informações Básicas
+        {isAuthenticated ? 'Complete seu Perfil' : 'Informações Básicas'}
       </Text>
       <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-        Precisamos de alguns dados para criar sua conta
+        {isAuthenticated
+          ? 'Preencha os dados restantes para continuar'
+          : 'Precisamos de alguns dados para criar sua conta'}
       </Text>
 
       <View style={styles.form}>
@@ -60,6 +65,7 @@ export const BasicInfoStep: React.FC<BasicInfoStepProps> = ({
             onChangeText={setName}
             autoCapitalize="words"
             autoCorrect={false}
+            editable={!isAuthenticated}
           />
         </View>
 
@@ -80,8 +86,9 @@ export const BasicInfoStep: React.FC<BasicInfoStepProps> = ({
               placeholder="000.000.000-00"
               placeholderTextColor={theme.colors.textSecondary}
               value={cpf}
-              onChangeText={setCpf}
+              onChangeText={(text) => setCpf(maskCpf(text))}
               keyboardType="numeric"
+              maxLength={14}
             />
           </View>
           <View style={[styles.inputContainer, { flex: 1 }]}>
@@ -100,46 +107,52 @@ export const BasicInfoStep: React.FC<BasicInfoStepProps> = ({
               placeholder="DD/MM/AAAA"
               placeholderTextColor={theme.colors.textSecondary}
               value={birthDate}
-              onChangeText={setBirthDate}
+              onChangeText={(text) => setBirthDate(maskDate(text))}
+              keyboardType="numeric"
+              maxLength={10}
             />
           </View>
         </View>
 
-        <View style={styles.inputContainer}>
-          <Text style={[styles.label, { color: theme.colors.text }]}>
-            Email
-          </Text>
-          <TextInput
-            style={[
-              styles.input,
-              {
-                backgroundColor: theme.colors.card,
-                color: theme.colors.text,
-                borderColor: theme.colors.border,
-              },
-            ]}
-            placeholder="seu@email.com"
-            placeholderTextColor={theme.colors.textSecondary}
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-        </View>
+        {!isAuthenticated && (
+          <>
+            <View style={styles.inputContainer}>
+              <Text style={[styles.label, { color: theme.colors.text }]}>
+                Email
+              </Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: theme.colors.card,
+                    color: theme.colors.text,
+                    borderColor: theme.colors.border,
+                  },
+                ]}
+                placeholder="seu@email.com"
+                placeholderTextColor={theme.colors.textSecondary}
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
 
-        <View style={styles.inputContainer}>
-          <Text style={[styles.label, { color: theme.colors.text }]}>
-            Senha
-          </Text>
-          <PasswordInput
-            placeholder="Mínimo 6 caracteres"
-            value={password}
-            onChangeText={setPassword}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-        </View>
+            <View style={styles.inputContainer}>
+              <Text style={[styles.label, { color: theme.colors.text }]}>
+                Senha
+              </Text>
+              <PasswordInput
+                placeholder="Mínimo 6 caracteres"
+                value={password}
+                onChangeText={setPassword}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+          </>
+        )}
       </View>
     </View>
   );

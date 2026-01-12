@@ -16,8 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { UserRole } from '@toinu/shared-types';
 import { useTheme } from '../../../../contexts/ThemeContext';
 import { useAuth } from '../../../../contexts/AuthContext';
-import { RoleSelectionStep } from './RoleSelectionStep';
-import { BasicInfoStep } from './BasicInfoStep';
+import { unmask, formatDateToApi } from '../../../../utils/masks';
 import { DriverPersonalInfoStep } from './DriverPersonalInfoStep';
 import { DriverAddressStep } from './DriverAddressStep';
 import { VehicleRegistrationPromptStep } from './VehicleRegistrationPromptStep';
@@ -25,41 +24,48 @@ import { VehicleRegistrationStep } from './VehicleRegistrationStep';
 
 const { width } = Dimensions.get('window');
 
-interface RegisterFlowScreenProps {
-  navigation: any;
+interface DriverRegisterFlowScreenProps {
+  onCancel: () => void;
+  onSuccess: () => void;
 }
 
-export const RegisterFlowScreen: React.FC<RegisterFlowScreenProps> = ({
-  navigation,
-}) => {
+export const DriverRegisterFlowScreen: React.FC<
+  DriverRegisterFlowScreenProps
+> = ({ onCancel, onSuccess }) => {
   const { theme } = useTheme();
-  const { register } = useAuth();
+  const { user, updateUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const flatListRef = useRef<FlatList>(null);
   const [currentStep, setCurrentStep] = useState(0);
 
-  // Form State
-  const [role, setRole] = useState<UserRole | null>(null);
-  const [name, setName] = useState('');
-  const [cpf, setCpf] = useState('');
-  const [birthDate, setBirthDate] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
   // Driver Personal Info
-  const [phone, setPhone] = useState('');
-  const [emailContact, setEmailContact] = useState('');
-  const [cnh, setCnh] = useState('');
+  const [phone, setPhone] = useState(user?.driver?.phoneContact || '');
+  const [emailContact, setEmailContact] = useState(
+    user?.driver?.emailContact || '',
+  );
+  const [cnh, setCnh] = useState(user?.driver?.cnh || '');
   const [cnhExpiration, setCnhExpiration] = useState('');
 
   // Address
-  const [street, setStreet] = useState('');
-  const [number, setNumber] = useState('');
-  const [complement, setComplement] = useState('');
-  const [neighborhood, setNeighborhood] = useState('');
-  const [city, setCity] = useState('');
-  const [state, setState] = useState('');
-  const [zipCode, setZipCode] = useState('');
+  const [street, setStreet] = useState(
+    (user?.driver?.address as any)?.street || '',
+  );
+  const [number, setNumber] = useState(
+    (user?.driver?.address as any)?.number || '',
+  );
+  const [complement, setComplement] = useState(
+    (user?.driver?.address as any)?.complement || '',
+  );
+  const [neighborhood, setNeighborhood] = useState(
+    (user?.driver?.address as any)?.neighborhood || '',
+  );
+  const [city, setCity] = useState((user?.driver?.address as any)?.city || '');
+  const [state, setState] = useState(
+    (user?.driver?.address as any)?.state || '',
+  );
+  const [zipCode, setZipCode] = useState(
+    (user?.driver?.address as any)?.zipCode || '',
+  );
 
   // Vehicle Logic
   const [wantToRegisterVehicle, setWantToRegisterVehicle] = useState<
@@ -75,97 +81,57 @@ export const RegisterFlowScreen: React.FC<RegisterFlowScreenProps> = ({
 
   const steps = useMemo(() => {
     const baseSteps = [
-      { id: 'basic', component: BasicInfoStep },
-      { id: 'role', component: RoleSelectionStep },
+      { id: 'driver_personal', component: DriverPersonalInfoStep },
+      { id: 'driver_address', component: DriverAddressStep },
+      { id: 'vehicle_prompt', component: VehicleRegistrationPromptStep },
     ];
 
-    if (role === UserRole.DRIVER) {
+    if (wantToRegisterVehicle === true) {
       baseSteps.push({
-        id: 'driver_personal',
-        component: DriverPersonalInfoStep,
+        id: 'vehicle_info',
+        component: VehicleRegistrationStep,
       });
-      baseSteps.push({ id: 'driver_address', component: DriverAddressStep });
-      baseSteps.push({
-        id: 'vehicle_prompt',
-        component: VehicleRegistrationPromptStep,
-      });
-
-      if (wantToRegisterVehicle === true) {
-        baseSteps.push({
-          id: 'vehicle_info',
-          component: VehicleRegistrationStep,
-        });
-      }
     }
 
     return baseSteps;
-  }, [role, wantToRegisterVehicle]);
+  }, [wantToRegisterVehicle]);
 
   const handleNext = async () => {
-    // Validações por step
+    // Step 0: Professional/Personal Info
     if (currentStep === 0) {
-      if (!name || !cpf || !birthDate || !email || !password) {
-        Alert.alert('Erro', 'Por favor, preencha todos os campos básicos');
-        return;
-      }
-      if (password.length < 6) {
-        Alert.alert('Erro', 'A senha deve ter no mínimo 6 caracteres');
+      if (!phone || !emailContact || !cnh || !cnhExpiration) {
+        Alert.alert('Erro', 'Por favor, preencha todos os dados profissionais');
         return;
       }
     }
 
-    if (currentStep === 1 && !role) {
-      Alert.alert('Erro', 'Por favor, selecione seu perfil');
+    // Step 1: Address
+    if (currentStep === 1) {
+      if (!street || !number || !neighborhood || !city || !state || !zipCode) {
+        Alert.alert('Erro', 'Por favor, preencha o endereço completo');
+        return;
+      }
+    }
+
+    // Step 2: Vehicle Prompt
+    if (currentStep === 2 && wantToRegisterVehicle === null) {
+      Alert.alert('Erro', 'Por favor, escolha uma opção');
       return;
     }
 
-    if (role === UserRole.DRIVER) {
-      // Step 2: Professional/Personal Info
-      if (currentStep === 2) {
-        if (!phone || !emailContact || !cnh || !cnhExpiration) {
-          Alert.alert(
-            'Erro',
-            'Por favor, preencha todos os dados profissionais',
-          );
-          return;
-        }
-      }
-
-      // Step 3: Address
-      if (currentStep === 3) {
-        if (
-          !street ||
-          !number ||
-          !neighborhood ||
-          !city ||
-          !state ||
-          !zipCode
-        ) {
-          Alert.alert('Erro', 'Por favor, preencha o endereço completo');
-          return;
-        }
-      }
-
-      // Step 4: Vehicle Prompt
-      if (currentStep === 4 && wantToRegisterVehicle === null) {
-        Alert.alert('Erro', 'Por favor, escolha uma opção');
+    // Step 3: Vehicle Info (if applicable)
+    if (currentStep === 3 && wantToRegisterVehicle === true) {
+      if (
+        !brand ||
+        !model ||
+        !yearOfManufacture ||
+        !yearOfModel ||
+        !licensePlate ||
+        !color ||
+        !renavam
+      ) {
+        Alert.alert('Erro', 'Por favor, preencha todos os dados do veículo');
         return;
-      }
-
-      // Step 5: Vehicle Info (if applicable)
-      if (currentStep === 5 && wantToRegisterVehicle === true) {
-        if (
-          !brand ||
-          !model ||
-          !yearOfManufacture ||
-          !yearOfModel ||
-          !licensePlate ||
-          !color ||
-          !renavam
-        ) {
-          Alert.alert('Erro', 'Por favor, preencha todos os dados do veículo');
-          return;
-        }
       }
     }
 
@@ -188,63 +154,57 @@ export const RegisterFlowScreen: React.FC<RegisterFlowScreenProps> = ({
       });
       setCurrentStep(currentStep - 1);
     } else {
-      navigation.goBack();
+      onCancel();
     }
   };
 
   const handleFinalSubmit = async () => {
     setLoading(true);
     try {
-      const driverData =
-        role === UserRole.DRIVER
+      const profileData = {
+        role: UserRole.DRIVER,
+        fullName: user?.fullName,
+        birthDate: user?.passenger?.birthDate || user?.driver?.birthDate,
+        cpf: user?.passenger?.cpf || user?.driver?.cpf,
+        phone: unmask(phone),
+        emailContact: emailContact,
+        cnh,
+        cnhExpiration: formatDateToApi(cnhExpiration),
+        address: {
+          street,
+          number,
+          complement,
+          neighborhood,
+          city,
+          state,
+          zipCode,
+        },
+        vehicle: wantToRegisterVehicle
           ? {
-              fullName: name,
-              birthDate,
-              cpf,
-              phone,
-              email: emailContact,
-              cnh,
-              cnhExpiration,
-              address: {
-                street,
-                number,
-                complement,
-                neighborhood,
-                city,
-                state,
-                zipCode,
-              },
-              vehicle: wantToRegisterVehicle
-                ? {
-                    brand,
-                    model,
-                    yearOfManufacture: parseInt(yearOfManufacture),
-                    yearOfModel: parseInt(yearOfModel),
-                    renavam,
-                    licensePlate,
-                    color,
-                  }
-                : undefined,
+              brand,
+              model,
+              yearOfManufacture: parseInt(yearOfManufacture),
+              yearOfModel: parseInt(yearOfModel),
+              renavam,
+              licensePlate,
+              color,
             }
-          : undefined;
+          : undefined,
+      };
 
-      await register(
-        email,
-        password,
-        name,
-        role || UserRole.PASSENGER,
-        driverData,
-      );
+      await updateUser(profileData);
 
-      if (role === UserRole.DRIVER && !wantToRegisterVehicle) {
+      if (!wantToRegisterVehicle) {
         Alert.alert(
           'Registro Concluído',
-          'Seu cadastro foi recebido e está aguardando aprovação. Você poderá cadastrar seu veículo mais tarde no perfil.',
-          [{ text: 'OK' }],
+          'Seu cadastro de motorista foi recebido e está aguardando aprovação. Você poderá cadastrar seu veículo mais tarde no perfil.',
+          [{ text: 'OK', onPress: onSuccess }],
         );
+      } else {
+        onSuccess();
       }
     } catch (error: any) {
-      Alert.alert('Erro ao registrar', error.message);
+      Alert.alert('Erro ao finalizar cadastro', error.message);
     } finally {
       setLoading(false);
     }
@@ -254,18 +214,6 @@ export const RegisterFlowScreen: React.FC<RegisterFlowScreenProps> = ({
     const StepComponent = item.component;
     return (
       <StepComponent
-        selectedRole={role}
-        onSelectRole={setRole}
-        name={name}
-        setName={setName}
-        email={email}
-        setEmail={setEmail}
-        password={password}
-        setPassword={setPassword}
-        birthDate={birthDate}
-        setBirthDate={setBirthDate}
-        cpf={cpf}
-        setCpf={setCpf}
         phone={phone}
         setPhone={setPhone}
         emailContact={emailContact}
@@ -312,6 +260,7 @@ export const RegisterFlowScreen: React.FC<RegisterFlowScreenProps> = ({
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
+      edges={['top', 'bottom']}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

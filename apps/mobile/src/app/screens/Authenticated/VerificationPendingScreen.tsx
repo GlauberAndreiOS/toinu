@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -15,8 +16,9 @@ export const VerificationPendingScreen: React.FC = () => {
   const { logout, user } = useAuth();
 
   return (
-    <View
+    <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
+      edges={['top', 'bottom']}
     >
       <View style={styles.content}>
         <View
@@ -39,9 +41,9 @@ export const VerificationPendingScreen: React.FC = () => {
         <Text
           style={[styles.description, { color: theme.colors.textSecondary }]}
         >
-          Olá {user?.passenger?.fullName || 'Passageiro'}, estamos verificando
-          seus dados e a validade do seu CPF. Este processo é rápido e garante a
-          segurança de todos na plataforma.
+          Olá {user?.fullName || user?.passenger?.fullName || 'Passageiro'},
+          estamos verificando seus dados e a validade do seu CPF. Este processo
+          é rápido e garante a segurança de todos na plataforma.
         </Text>
 
         <View style={styles.statusCard}>
@@ -79,7 +81,7 @@ export const VerificationPendingScreen: React.FC = () => {
           Sair da conta
         </Text>
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 };
 

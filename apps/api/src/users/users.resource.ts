@@ -6,6 +6,7 @@ export class UsersResource {
     return {
       id: user.id,
       email: user.email,
+      fullName: user.passenger?.fullName || user.driver?.fullName,
       phone: user.phone,
       createdAt: user.createdAt?.toISOString(),
       updatedAt: user.updatedAt?.toISOString(),
