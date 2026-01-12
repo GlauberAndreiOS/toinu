@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PassengerFavoriteAddress as FavoriteAddressSchema } from '@prisma/client';
+import { FavoriteAddress as FavoriteAddressSchema } from '@prisma/client';
 import { FavoriteAddressesRepository } from './favorite-addresses.repository';
 import { CreateFavoriteAddressDto } from './dto/create-favorite-address.dto';
 import { UpdateFavoriteAddressDto } from './dto/update-favorite-address.dto';
@@ -24,8 +24,8 @@ export class FavoriteAddressesService {
     return this.repository.findById(id);
   }
 
-  async findByPassengerId(passengerId: string): Promise<FavoriteAddressSchema[]> {
-    return this.repository.findByPassengerId(passengerId);
+  async findByUserId(userId: string): Promise<FavoriteAddressSchema[]> {
+    return this.repository.findByUserId(userId);
   }
 
   async findAll(): Promise<FavoriteAddressSchema[]> {

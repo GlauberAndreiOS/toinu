@@ -1,117 +1,61 @@
 import { Injectable } from '@nestjs/common';
-import { User as UserSchema, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma, User } from '@prisma/client';
 
 @Injectable()
 export class UsersRepository {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: Prisma.UserCreateInput): Promise<UserSchema> {
+  async create(data: Prisma.UserCreateInput): Promise<User> {
     return this.prisma.user.create({
       data,
       include: {
-        driver: {
-          include: {
-            vehicles: true,
-          },
-        },
-        passenger: {
-          include: {
-            favoriteAddresses: true,
-          },
-        },
+        driver: true,
+        passenger: true,
       },
     });
   }
 
-  async update(id: string, data: Prisma.UserUpdateInput): Promise<boolean> {
-    const { count } = await this.prisma.user.updateMany({
-      where: { id },
-      data,
-    });
-    return count > 0;
-  }
-
-  async updateWithNested(
-    id: string,
-    data: Prisma.UserUpdateInput,
-  ): Promise<UserSchema> {
+  async update(id: string, data: Prisma.UserUpdateInput): Promise<User> {
     return this.prisma.user.update({
       where: { id },
       data,
-      include: {
-        driver: {
-          include: {
-            vehicles: true,
-          },
-        },
-        passenger: {
-          include: {
-            favoriteAddresses: true,
-          },
-        },
-      },
     });
   }
 
-  async delete(id: string): Promise<boolean> {
-    const { count } = await this.prisma.user.deleteMany({
-      where: { id },
-    });
-    return count > 0;
-  }
-
-  async findById(id: string): Promise<UserSchema | null> {
+  async findById(id: string): Promise<User | null> {
     return this.prisma.user.findUnique({
       where: { id },
       include: {
-        driver: {
-          include: {
-            vehicles: true,
-          },
-        },
-        passenger: {
-          include: {
-            favoriteAddresses: true,
-          },
-        },
+        driver: { include: { vehicles: true } },
+        passenger: true,
+        favoriteAddresses: true,
       },
     });
   }
 
-  async findByEmail(email: string): Promise<UserSchema | null> {
+  async findByEmail(email: string): Promise<User | null> {
     return this.prisma.user.findUnique({
       where: { email },
       include: {
-        driver: {
-          include: {
-            vehicles: true,
-          },
-        },
-        passenger: {
-          include: {
-            favoriteAddresses: true,
-          },
-        },
+        driver: true,
+        passenger: true,
       },
     });
   }
 
-  async findAll(): Promise<UserSchema[]> {
+  async findAll(): Promise<User[]> {
     return this.prisma.user.findMany({
-      orderBy: { createdAt: 'desc' },
       include: {
-        driver: {
-          include: {
-            vehicles: true,
-          },
-        },
-        passenger: {
-          include: {
-            favoriteAddresses: true,
-          },
-        },
+        driver: true,
+        passenger: true,
       },
+    });
+  }
+
+  async delete(id: string): Promise<User> {
+    return this.prisma.user.delete({
+      where: { id },
     });
   }
 }

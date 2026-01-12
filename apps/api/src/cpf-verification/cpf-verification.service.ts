@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { PassengerStatus, CpfVerificationStatus } from '@toinu/shared-types';
 import { CbcCpfClient } from './cbc-cpf.client';
 
 @Injectable()
@@ -12,75 +11,42 @@ export class CpfVerificationService {
     private cbcCpfClient: CbcCpfClient,
   ) {}
 
-  /**
-   * Este método é pensado para ser chamado por:
-   * - job
-   * - fila
-   * - cron
-   */
   async verifyPassengerCpf(passengerId: string) {
-    this.logger.log(
-      `Iniciando verificação de CPF para passageiro ${passengerId}`,
-    );
-
     const passenger = await this.prisma.passenger.findUnique({
       where: { id: passengerId },
+      include: { user: true }
     });
 
-    if (!passenger) {
-      this.logger.error(`Passageiro ${passengerId} não encontrado`);
-      return;
-    }
+    if (!passenger || !passenger.user) return;
 
-    // 1️⃣ Consulta base oficial (Gov)
-    const result = await this.cbcCpfClient.consultCpf(passenger.cpf);
+    const result = await this.cbcCpfClient.consultCpf(passenger.user.cpf);
 
-    // 2️⃣ Validações mínimas
-    const nomeConfere =
-      result.nome.toUpperCase() === passenger.fullName.toUpperCase();
-
+    const nomeConfere = result.nome.toUpperCase() === passenger.user.fullName.toUpperCase();
     const nascimentoConfere =
       new Date(result.dataNascimento).toISOString().slice(0, 10) ===
-      passenger.birthDate.toISOString().slice(0, 10);
+      passenger.user.birthDate.toISOString().slice(0, 10);
 
-    const cpfRegular = result.situacaoCadastral === 'REGULAR';
+    const aprovado = nomeConfere && nascimentoConfere && result.situacaoCadastral === 'REGULAR';
 
-    const aprovado = nomeConfere && nascimentoConfere && cpfRegular;
+    await this.prisma.cpfVerification.create({
+      data: {
+        passengerId: passenger.id,
+        cpf: passenger.user.cpf,
+        fullName: passenger.user.fullName,
+        birthDate: passenger.user.birthDate,
+        provider: 'CBC_GOV_BR',
+        status: aprovado ? 'APPROVED' : 'REJECTED',
+        rawResponse: result as any
+      }
+    });
 
-    // 3️⃣ Persistência transacional
-    await this.prisma.$transaction([
-      this.prisma.cpfVerification.create({
-        data: {
-          passengerId: passenger.id,
-          cpf: passenger.cpf,
-          fullName: passenger.fullName,
-          birthDate: passenger.birthDate,
-          provider: 'CBC_GOV_BR',
-          status: aprovado
-            ? CpfVerificationStatus.APPROVED
-            : CpfVerificationStatus.REJECTED,
-          rawResponse: result,
-        },
-      }),
-
-      this.prisma.passenger.update({
-        where: { id: passenger.id },
-        data: aprovado
-          ? {
-              status: PassengerStatus.VERIFIED,
-              cpfVerified: true,
-              cpfVerifiedAt: new Date(),
-            }
-          : {
-              status: PassengerStatus.REJECTED,
-            },
-      }),
-    ]);
-
-    this.logger.log(
-      `Verificação CPF finalizada para ${passengerId} → ${
-        aprovado ? 'APROVADO' : 'REJEITADO'
-      }`,
-    );
+    await this.prisma.passenger.update({
+      where: { id: passengerId },
+      data: {
+        status: aprovado ? 'VERIFIED' : 'REJECTED',
+        cpfVerified: aprovado,
+        cpfVerifiedAt: aprovado ? new Date() : null
+      }
+    });
   }
 }

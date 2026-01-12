@@ -6,10 +6,6 @@ datasource db {
   provider = "postgresql"
 }
 
-//////////////////////
-// ENUMS
-//////////////////////
-
 enum TripStatus {
   REQUESTED
   ACCEPTED
@@ -31,73 +27,56 @@ enum CpfVerificationStatus {
   ERROR
 }
 
-//////////////////////
-// MODELS
-//////////////////////
-
 model User {
-  id                String   @id @default(uuid())
+  id              String    @id @default(uuid())
+  email           String?   @unique
+  phone           String?   @unique
+  password        String?
+  oauthProvider   String?
+  oauthProviderId String?
+  fullName        String?
+  birthDate       DateTime?
+  cpf             String?   @unique @db.VarChar(14)
+  address         Json?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  // Credenciais e Auth
-  email             String?  @unique
-  phone             String?  @unique
-  password          String?
-  oauthProvider     String?
-  oauthProviderId   String?
-
-  // Dados Pessoais Centralizados
-  fullName          String?
-  birthDate         DateTime?
-  cpf               String?  @unique @db.VarChar(14)
-  address           Json?
-
-  // Metadados
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  // Relacionamentos de Perfil (One-to-One)
   driver            Driver?
   passenger         Passenger?
+  favoriteAddresses FavoriteAddress[]
 
   @@map("users")
 }
 
 model Passenger {
-  id                String   @id @default(uuid())
-  userId            String   @unique
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            String          @id @default(uuid())
+  userId        String          @unique
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status        PassengerStatus @default(PENDING_VERIFICATION)
+  cpfVerified   Boolean         @default(false)
+  cpfVerifiedAt DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
-  // Campos específicos de Passageiro
-  status            PassengerStatus @default(PENDING_VERIFICATION)
-  cpfVerified       Boolean         @default(false)
-  cpfVerifiedAt     DateTime?
-
-  trips             Trip[]
-  cpfVerifications  CpfVerification[]
-  favoriteAddresses PassengerFavoriteAddress[]
-
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  trips            Trip[]
+  cpfVerifications CpfVerification[]
 
   @@map("passengers")
 }
 
 model Driver {
-  id                String   @id @default(uuid())
-  userId            String   @unique
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cnh             String   @unique
+  cnhExpiration   DateTime
+  isApproved      Boolean  @default(false)
+  activeVehicleId String?  @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  cnh               String   @unique
-  cnhExpiration     DateTime
-  isApproved        Boolean  @default(false)
-
-  activeVehicleId   String?  @unique
-
-  vehicles          Vehicle[]
-  trips             Trip[]
-
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  vehicles Vehicle[]
+  trips    Trip[]
 
   @@map("drivers")
 }
@@ -106,7 +85,6 @@ model Vehicle {
   id                String   @id @default(uuid())
   driverId          String
   driver            Driver   @relation(fields: [driverId], references: [id])
-
   brand             String
   model             String
   yearOfManufacture Int
@@ -114,83 +92,67 @@ model Vehicle {
   renavam           String   @unique
   licensePlate      String   @unique
   color             String
-
   isActive          Boolean  @default(true)
-
-  trips             Trip[]
-
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+
+  trips Trip[]
 
   @@map("vehicles")
 }
 
 model FavoriteAddress {
-  id          String   @id @default(uuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  label       String   // ex: "Casa", "Trabalho", "Academia"
-  street      String
-  number      String
-  complement  String?
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label        String
+  street       String
+  number       String
+  complement   String?
   neighborhood String
-  city        String
-  state       String
-  zipCode     String
-
-  latitude    Float?
-  longitude   Float?
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  city         String
+  state        String
+  zipCode      String
+  latitude     Float?
+  longitude    Float?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@map("favorite_addresses")
 }
 
 model CpfVerification {
-  id                String   @id @default(uuid())
-  passengerId       String
-  passenger         Passenger @relation(fields: [passengerId], references: [id])
-
-  cpf               String
-  fullName          String
-  birthDate         DateTime
-
-  provider          String
-  status            CpfVerificationStatus
-  rawResponse       Json?
-
-  createdAt         DateTime @default(now())
+  id          String                @id @default(uuid())
+  passengerId String
+  passenger   Passenger             @relation(fields: [passengerId], references: [id])
+  cpf         String
+  fullName    String
+  birthDate   DateTime
+  provider    String
+  status      CpfVerificationStatus
+  rawResponse Json?
+  createdAt   DateTime              @default(now())
 
   @@map("cpf_verifications")
 }
 
 model Trip {
-  id                String   @id @default(uuid())
-
-  driverId          String
-  driver            Driver   @relation(fields: [driverId], references: [id])
-
-  passengerId       String
-  passenger         Passenger @relation(fields: [passengerId], references: [id])
-
-  vehicleId         String?
-  vehicle           Vehicle? @relation(fields: [vehicleId], references: [id])
-
-  origin            String
-  destination       String
-
-  status            TripStatus @default(REQUESTED)
-
-  startedAt         DateTime?
-  finishedAt        DateTime?
-
-  price             Decimal?
-  distanceKm        Decimal?
-
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id          String     @id @default(uuid())
+  driverId    String
+  driver      Driver     @relation(fields: [driverId], references: [id])
+  passengerId String
+  passenger   Passenger  @relation(fields: [passengerId], references: [id])
+  vehicleId   String?
+  vehicle     Vehicle?   @relation(fields: [vehicleId], references: [id])
+  origin      String
+  destination String
+  status      TripStatus @default(REQUESTED)
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  price       Decimal?
+  distanceKm  Decimal?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   @@map("trips")
 }

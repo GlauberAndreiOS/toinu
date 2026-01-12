@@ -3,7 +3,7 @@ import { AuthService } from './auth.service';
 import { AuthResponse, User } from '@toinu/shared-types';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { LoginDto } from './dto/login.dto';
-import { CreateUserDto } from './dto/create-user.dto';
+import { CreateUserDto } from '../users/dto/create-user.dto';
 
 @Controller('auth')
 export class AuthController {

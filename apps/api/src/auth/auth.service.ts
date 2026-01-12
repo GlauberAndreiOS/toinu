@@ -10,7 +10,7 @@ import { UsersResource } from '../users/users.resource';
 import { AuthResponse, User } from '@toinu/shared-types';
 import { JwtPayload } from './jwt.strategy';
 import { LoginDto } from './dto/login.dto';
-import { CreateUserDto } from './dto/create-user.dto';
+import { CreateUserDto } from '../users/dto/create-user.dto';
 
 @Injectable()
 export class AuthService {

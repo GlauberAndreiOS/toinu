@@ -15,6 +15,10 @@ CREATE TABLE "users" (
     "password" TEXT,
     "oauthProvider" TEXT,
     "oauthProviderId" TEXT,
+    "fullName" TEXT,
+    "birthDate" TIMESTAMP(3),
+    "cpf" VARCHAR(14),
+    "address" JSONB,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -22,18 +26,26 @@ CREATE TABLE "users" (
 );
 
 -- CreateTable
+CREATE TABLE "passengers" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "status" "PassengerStatus" NOT NULL DEFAULT 'PENDING_VERIFICATION',
+    "cpfVerified" BOOLEAN NOT NULL DEFAULT false,
+    "cpfVerifiedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "passengers_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "drivers" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
-    "fullName" TEXT NOT NULL,
-    "birthDate" TIMESTAMP(3) NOT NULL,
-    "cpf" VARCHAR(14) NOT NULL,
-    "phoneContact" TEXT,
-    "emailContact" TEXT,
     "cnh" TEXT NOT NULL,
     "cnhExpiration" TIMESTAMP(3) NOT NULL,
-    "address" JSONB,
     "isApproved" BOOLEAN NOT NULL DEFAULT false,
+    "activeVehicleId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -59,21 +71,23 @@ CREATE TABLE "vehicles" (
 );
 
 -- CreateTable
-CREATE TABLE "passengers" (
+CREATE TABLE "favorite_addresses" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
-    "fullName" TEXT NOT NULL,
-    "cpf" VARCHAR(14) NOT NULL,
-    "birthDate" TIMESTAMP(3) NOT NULL,
-    "phoneContact" TEXT,
-    "status" "PassengerStatus" NOT NULL DEFAULT 'PENDING_VERIFICATION',
-    "cpfVerified" BOOLEAN NOT NULL DEFAULT false,
-    "cpfVerifiedAt" TIMESTAMP(3),
-    "address" JSONB,
+    "label" TEXT NOT NULL,
+    "street" TEXT NOT NULL,
+    "number" TEXT NOT NULL,
+    "complement" TEXT,
+    "neighborhood" TEXT NOT NULL,
+    "city" TEXT NOT NULL,
+    "state" TEXT NOT NULL,
+    "zipCode" TEXT NOT NULL,
+    "latitude" DOUBLE PRECISION,
+    "longitude" DOUBLE PRECISION,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "passengers_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "favorite_addresses_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -117,13 +131,19 @@ CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 CREATE UNIQUE INDEX "users_phone_key" ON "users"("phone");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "users_cpf_key" ON "users"("cpf");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "passengers_userId_key" ON "passengers"("userId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "drivers_userId_key" ON "drivers"("userId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "drivers_cpf_key" ON "drivers"("cpf");
+CREATE UNIQUE INDEX "drivers_cnh_key" ON "drivers"("cnh");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "drivers_cnh_key" ON "drivers"("cnh");
+CREATE UNIQUE INDEX "drivers_activeVehicleId_key" ON "drivers"("activeVehicleId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "vehicles_renavam_key" ON "vehicles"("renavam");
@@ -131,20 +151,17 @@ CREATE UNIQUE INDEX "vehicles_renavam_key" ON "vehicles"("renavam");
 -- CreateIndex
 CREATE UNIQUE INDEX "vehicles_licensePlate_key" ON "vehicles"("licensePlate");
 
--- CreateIndex
-CREATE UNIQUE INDEX "passengers_userId_key" ON "passengers"("userId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "passengers_cpf_key" ON "passengers"("cpf");
+-- AddForeignKey
+ALTER TABLE "passengers" ADD CONSTRAINT "passengers_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "drivers" ADD CONSTRAINT "drivers_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "drivers" ADD CONSTRAINT "drivers_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "vehicles" ADD CONSTRAINT "vehicles_driverId_fkey" FOREIGN KEY ("driverId") REFERENCES "drivers"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "passengers" ADD CONSTRAINT "passengers_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "favorite_addresses" ADD CONSTRAINT "favorite_addresses_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "cpf_verifications" ADD CONSTRAINT "cpf_verifications_passengerId_fkey" FOREIGN KEY ("passengerId") REFERENCES "passengers"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -7,12 +7,12 @@ import {
   Patch,
   Post,
   UseGuards,
+  NotFoundException,
 } from '@nestjs/common';
 import { FavoriteAddressesService } from './favorite-addresses.service';
 import { CreateFavoriteAddressDto } from './dto/create-favorite-address.dto';
 import { UpdateFavoriteAddressDto } from './dto/update-favorite-address.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { PassengerGuard } from '../auth/guards/passenger.guard';
 
 @Controller('favorite-addresses')
 @UseGuards(JwtAuthGuard)
@@ -30,22 +30,28 @@ export class FavoriteAddressesController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.service.findOne(id);
+  async findOne(@Param('id') id: string) {
+    const address = await this.service.findOne(id);
+    if (!address) throw new NotFoundException('Endereço não encontrado');
+    return address;
   }
 
-  @Get('passenger/:passengerId')
-  findByPassengerId(@Param('passengerId') passengerId: string) {
-    return this.service.findByPassengerId(passengerId);
+  @Get('user/:userId')
+  findByUserId(@Param('userId') userId: string) {
+    return this.service.findByUserId(userId);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() data: UpdateFavoriteAddressDto) {
-    return this.service.update(id, data);
+  async update(@Param('id') id: string, @Body() data: UpdateFavoriteAddressDto) {
+    const updated = await this.service.update(id, data);
+    if (!updated) throw new NotFoundException('Endereço não encontrado para atualizar');
+    return true;
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.service.delete(id);
+  async remove(@Param('id') id: string) {
+    const deleted = await this.service.delete(id);
+    if (!deleted) throw new NotFoundException('Endereço não encontrado para remover');
+    return true;
   }
 }
