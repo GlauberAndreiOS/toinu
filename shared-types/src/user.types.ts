@@ -24,40 +24,6 @@ export enum CpfVerificationStatus {
   ERROR = 'ERROR',
 }
 
-export interface User {
-  id: string;
-  email?: string;
-  fullName?: string; // Adicionado para facilitar exibição
-  phone?: string;
-  password?: string;
-  oauthProvider?: string;
-  oauthProviderId?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  role?: UserRole; // Adicionado para rastrear o papel ativo no frontend
-  driver?: Driver;
-  passenger?: Passenger;
-}
-
-export interface Driver {
-  id: string;
-  userId: string;
-  fullName: string;
-  birthDate: string;
-  cpf: string;
-  phoneContact?: string;
-  emailContact?: string;
-  cnh: string;
-  cnhExpiration: string;
-  address?: Address;
-  isApproved: boolean;
-  user?: User;
-  trips?: Trip[];
-  vehicles?: Vehicle[];
-  createdAt?: string;
-  updatedAt?: string;
-}
-
 export interface Address {
   street: string;
   number: string;
@@ -66,6 +32,39 @@ export interface Address {
   city: string;
   state: string;
   zipCode: string;
+}
+
+export interface User {
+  id: string;
+  email?: string;
+  fullName?: string;
+  phone?: string;
+  password?: string;
+  birthDate?: string; // Adicionado
+  cpf?: string; // Adicionado
+  address?: Address; // Adicionado
+  oauthProvider?: string;
+  oauthProviderId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  role?: UserRole;
+  driver?: Driver;
+  passenger?: Passenger;
+  favoriteAddresses?: PassengerFavoriteAddress[]; // Movido para User (opcional, pois no banco é User -> FavoriteAddress)
+}
+
+export interface Driver {
+  id: string;
+  userId: string;
+  // Campos comuns removidos (estão em User)
+  cnh: string;
+  cnhExpiration: string;
+  isApproved: boolean;
+  user?: User;
+  trips?: Trip[];
+  vehicles?: Vehicle[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Vehicle {
@@ -86,24 +85,21 @@ export interface Vehicle {
 export interface Passenger {
   id: string;
   userId: string;
-  fullName: string;
-  cpf: string;
-  birthDate: string;
-  phoneContact?: string;
+  // Campos comuns removidos (estão em User)
   status: PassengerStatus;
   cpfVerified: boolean;
   cpfVerifiedAt?: string;
-  address?: Address;
   user?: User;
   trips?: Trip[];
-  favoriteAddresses?: PassengerFavoriteAddress[];
+  // favoriteAddresses removido daqui pois está em User no banco, mas mantido em User interface
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface PassengerFavoriteAddress {
   id: string;
-  passengerId: string;
+  passengerId?: string; // Opcional ou removido, pois agora está ligado ao User (userId)
+  userId?: string; // Adicionado para refletir o banco
   label: string;
   street: string;
   number: string;
@@ -135,6 +131,9 @@ export interface CreateUserPayload {
   fullName?: string;
   phone?: string;
   role?: UserRole;
+  birthDate?: string;
+  cpf?: string;
+  address?: Address;
 }
 
 export interface UpdateUserPayload {
@@ -142,6 +141,9 @@ export interface UpdateUserPayload {
   password?: string;
   fullName?: string;
   phone?: string;
+  birthDate?: string;
+  cpf?: string;
+  address?: Address;
 }
 
 export interface DeleteUserPayload {

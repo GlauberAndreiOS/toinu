@@ -7,17 +7,15 @@ export class PassengersResource {
     return {
       id: passenger.id,
       userId: passenger.userId,
-      fullName: passenger.fullName,
-      cpf: passenger.cpf,
-      birthDate: passenger.birthDate?.toISOString(),
-      phoneContact: passenger.phoneContact,
+      // Campos comuns removidos (estão em user)
       status: passenger.status,
       cpfVerified: passenger.cpfVerified,
       cpfVerifiedAt: passenger.cpfVerifiedAt?.toISOString(),
-      address: passenger.address,
       user: passenger.user ? UsersResource.format(passenger.user) : undefined,
       trips: passenger.trips || [],
-      favoriteAddresses: passenger.favoriteAddresses || [],
+      // favoriteAddresses removido daqui pois está em User
+      createdAt: passenger.createdAt?.toISOString(),
+      updatedAt: passenger.updatedAt?.toISOString(),
     };
   }
 

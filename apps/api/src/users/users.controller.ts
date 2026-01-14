@@ -6,6 +6,7 @@ import {
   Param,
   Get,
   UseGuards,
+  NotFoundException,
 } from '@nestjs/common';
 import { User } from '@toinu/shared-types';
 import { UsersService } from './users.service';
@@ -35,11 +36,15 @@ export class UsersController {
   }
 
   @Post(':id')
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
-  ): Promise<boolean> {
-    return this.usersService.update(id, updateUserDto);
+  ): Promise<User> {
+    const updatedUser = await this.usersService.update(id, updateUserDto);
+    if (!updatedUser) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+    return UsersResource.format(updatedUser) as User;
   }
 
   @Delete(':id')

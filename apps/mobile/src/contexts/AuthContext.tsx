@@ -6,8 +6,36 @@ import React, {
   ReactNode,
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { authApi, AuthResponse } from '../services/api';
+import { authApi, AuthResponse } from '@services/api';
 import { User } from '@toinu/shared-types';
+
+interface AdditionalData {
+  fullName?: string;
+  birthDate?: string;
+  cpf?: string;
+  phone?: string;
+  email?: string;
+  cnh?: string;
+  cnhExpiration?: string;
+  address?: {
+    street: string;
+    number: string;
+    complement?: string;
+    neighborhood: string;
+    city: string;
+    state: string;
+    zipCode: string;
+  };
+  vehicle?: {
+    brand: string;
+    model: string;
+    yearOfManufacture: number;
+    yearOfModel: number;
+    renavam: string;
+    licensePlate: string;
+    color: string;
+  };
+}
 
 interface AuthContextData {
   user: User | null;
@@ -23,33 +51,7 @@ interface AuthContextData {
     password: string,
     fullName: string,
     role?: 'DRIVER' | 'PASSENGER',
-    driverData?: {
-      fullName: string;
-      birthDate: string;
-      cpf: string;
-      phone: string;
-      email: string;
-      cnh: string;
-      cnhExpiration: string;
-      address: {
-        street: string;
-        number: string;
-        complement?: string;
-        neighborhood: string;
-        city: string;
-        state: string;
-        zipCode: string;
-      };
-      vehicle?: {
-        brand: string;
-        model: string;
-        yearOfManufacture: number;
-        yearOfModel: number;
-        renavam: string;
-        licensePlate: string;
-        color: string;
-      };
-    },
+    additionalData?: AdditionalData,
   ) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (data: any) => Promise<void>;
@@ -87,6 +89,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       if (storedToken && storedUser) {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
+
+        try {
+          const updatedUser = await authApi.getProfile();
+          setUser(updatedUser);
+          await AsyncStorage.setItem('@auth_user', JSON.stringify(updatedUser));
+        } catch (profileError) {
+          console.error('Erro ao atualizar perfil na inicialização:', profileError);
+        }
       }
 
       if (storedEmail) {
@@ -110,7 +120,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       await AsyncStorage.setItem('@auth_token', response.access_token);
       await AsyncStorage.setItem('@auth_user', JSON.stringify(response.user));
 
-      // Salva o email se "Lembrar-me" estiver ativado
       if (rememberMe) {
         await AsyncStorage.setItem('@saved_email', email);
       } else {
@@ -130,42 +139,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     password: string,
     fullName: string,
     role: 'DRIVER' | 'PASSENGER' = 'PASSENGER',
-    driverData?: {
-      fullName: string;
-      birthDate: string;
-      cpf: string;
-      phone: string;
-      email: string;
-      cnh: string;
-      cnhExpiration: string;
-      address: {
-        street: string;
-        number: string;
-        complement?: string;
-        neighborhood: string;
-        city: string;
-        state: string;
-        zipCode: string;
-      };
-      vehicle?: {
-        brand: string;
-        model: string;
-        yearOfManufacture: number;
-        yearOfModel: number;
-        renavam: string;
-        licensePlate: string;
-        color: string;
-      };
-    },
+    additionalData?: AdditionalData,
   ) => {
     try {
-      const response: AuthResponse = await authApi.register({
+      // Prepara os dados para envio, garantindo que campos obrigatórios estejam presentes
+      // O backend espera CreateUserDto que tem campos na raiz
+      const registerData: any = {
         email,
         password,
         fullName,
         role,
-        ...driverData,
-      });
+        ...additionalData,
+      };
+
+      const response: AuthResponse = await authApi.register(registerData);
 
       await AsyncStorage.setItem('@auth_token', response.access_token);
       await AsyncStorage.setItem('@auth_user', JSON.stringify(response.user));
@@ -199,7 +186,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const refreshProfile = async () => {
     try {
       const updatedUser = await authApi.getProfile();
-      // Mantém a role ativa se já houver uma
       if (user?.role) {
         updatedUser.role = user.role;
       }

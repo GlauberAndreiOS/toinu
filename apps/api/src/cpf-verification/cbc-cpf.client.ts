@@ -1,49 +1,39 @@
 import { Injectable, Logger } from '@nestjs/common';
-import axios from 'axios';
 
 @Injectable()
 export class CbcCpfClient {
   private readonly logger = new Logger(CbcCpfClient.name);
-
-  // ⚠️ Em produção isso vem de env + OAuth2
   private readonly baseUrl =
     'https://apigateway.conectagov.estaleiro.serpro.gov.br/api-cpf-light/v2';
 
-  async consultCpf(cpf: string) {
-    this.logger.log(`Consultando CPF ${cpf} no CBC`);
+  async consultCpf(
+    cpf: string,
+    fullName?: string,
+    birthDate?: Date,
+  ): Promise<any> {
+    this.logger.log(`Iniciando consulta de CPF: ${cpf}`);
 
-    /**
-     * ⚠️ SIMULAÇÃO:
-     * Aqui você faria:
-     *  - obter token OAuth2
-     *  - chamar endpoint real
-     */
+    if (process.env.NODE_ENV === 'development') {
+      await this.delay(2000);
 
-    // ===== SIMULAÇÃO DE RESPOSTA REAL =====
-    return {
-      cpf,
-      nome: 'JOAO DA SILVA',
-      dataNascimento: '1990-05-20',
-      situacaoCadastral: 'REGULAR',
-    };
+      return {
+        cpf: cpf,
+        nome: fullName || 'NOME MOCKADO',
+        dataNascimento: birthDate
+          ? birthDate.toISOString().slice(0, 10)
+          : '1990-01-01',
+        situacaoCadastral: 'REGULAR',
+      };
+    }
 
-    /**
-     * ===== IMPLEMENTAÇÃO REAL (comentada) =====
-     *
-     * const token = await this.getAccessToken();
-     *
-     * const response = await axios.post(
-     *   `${this.baseUrl}/consulta/cpf`,
-     *   { listaCpf: [cpf] },
-     *   {
-     *     headers: {
-     *       Authorization: `Bearer ${token}`,
-     *       'Content-Type': 'application/json',
-     *     },
-     *   },
-     * );
-     *
-     * return response.data;
-     */
+    return this.realConsultation(cpf);
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private async realConsultation(cpf: string): Promise<any> {
+    throw new Error('Método de produção não implementado');
   }
 }

@@ -6,8 +6,10 @@ import {
   IsDateString,
   IsObject,
   ValidateNested,
+  IsEnum,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { UserRole } from '@toinu/shared-types';
 
 export class AddressDto {
   @IsString() street: string;
@@ -38,6 +40,10 @@ export class CreateUserDto {
 
   @IsDateString()
   birthDate: string;
+
+  @IsOptional()
+  @IsEnum(UserRole, { message: 'Role deve ser DRIVER ou PASSENGER' })
+  role?: UserRole;
 
   @IsOptional()
   @IsObject()

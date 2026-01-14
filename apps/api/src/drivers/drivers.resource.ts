@@ -7,14 +7,9 @@ export class DriversResource {
     return {
       id: driver.id,
       userId: driver.userId,
-      fullName: driver.fullName,
-      birthDate: driver.birthDate?.toISOString(),
-      cpf: driver.cpf,
-      phoneContact: driver.phoneContact,
-      emailContact: driver.emailContact,
+      // Campos comuns removidos (estão em user)
       cnh: driver.cnh,
       cnhExpiration: driver.cnhExpiration?.toISOString(),
-      address: driver.address || undefined,
       isApproved: driver.isApproved,
       user: driver.user ? UsersResource.format(driver.user) : undefined,
       trips: driver.trips || [],
@@ -30,8 +25,12 @@ export class DriversResource {
             licensePlate: v.licensePlate,
             color: v.color,
             isActive: v.isActive,
+            createdAt: v.createdAt?.toISOString(),
+            updatedAt: v.updatedAt?.toISOString(),
           }))
         : [],
+      createdAt: driver.createdAt?.toISOString(),
+      updatedAt: driver.updatedAt?.toISOString(),
     };
   }
 

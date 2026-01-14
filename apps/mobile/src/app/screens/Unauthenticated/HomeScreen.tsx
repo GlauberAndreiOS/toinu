@@ -8,7 +8,6 @@ interface HomeScreenProps {
 
 export function HomeScreen({ onGetStarted }: HomeScreenProps) {
   const handleGetStarted = () => {
-    // TODO: navegar para a tela de registro/login
     onGetStarted?.();
   };
 
@@ -16,4 +15,3 @@ export function HomeScreen({ onGetStarted }: HomeScreenProps) {
 }
 
 const styles = StyleSheet.create({});
-
