@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { authApi } from '../../../services/api';
@@ -20,10 +21,6 @@ interface UserProfile {
   createdAt?: string;
 }
 
-/**
- * Tela de Perfil do Usuário
- * Exibe dados do usuário autenticado e permite logout
- */
 export function ProfileScreen() {
   const { user, logout, token, switchRole, refreshProfile } = useAuth();
   const { theme } = useTheme();
@@ -32,11 +29,9 @@ export function ProfileScreen() {
   const [error, setError] = useState<string | null>(null);
   const [isRegisteringDriver, setIsRegisteringDriver] = useState(false);
 
-  const dynamicStyles = useMemo(() => createProfileStyles(theme), [theme]);
-
   useEffect(() => {
     loadProfile();
-  }, [token, user?.role]); // Recarrega se a role mudar
+  }, [token, user?.role]);
 
   const loadProfile = async () => {
     try {
@@ -101,39 +96,25 @@ export function ProfileScreen() {
 
   if (loading) {
     return (
-      <View style={dynamicStyles.container}>
-        <ActivityIndicator
-          size="large"
-          color={theme.colors.primary}
-          style={{ marginTop: 50 }}
-        />
-        <Text style={dynamicStyles.loadingText}>Carregando perfil...</Text>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#4F46E5" />
+        <Text style={styles.loadingText}>Carregando perfil...</Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={dynamicStyles.container}>
-        <View style={dynamicStyles.errorContainer}>
-          <Text style={dynamicStyles.errorIcon}>⚠️</Text>
-          <Text style={dynamicStyles.errorTitle}>Erro ao Carregar Perfil</Text>
-          <Text style={dynamicStyles.errorMessage}>{error}</Text>
-
-          <TouchableOpacity
-            style={dynamicStyles.retryButton}
-            onPress={loadProfile}
-          >
-            <Text style={dynamicStyles.retryButtonText}>Tentar Novamente</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={dynamicStyles.logoutButton}
-            onPress={handleLogout}
-          >
-            <Text style={dynamicStyles.logoutButtonText}>Sair</Text>
-          </TouchableOpacity>
-        </View>
+      <View style={styles.errorContainer}>
+        <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
+        <Text style={styles.errorTitle}>Erro ao Carregar Perfil</Text>
+        <Text style={styles.errorMessage}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={loadProfile}>
+          <Text style={styles.retryButtonText}>Tentar Novamente</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutButtonText}>Sair</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -154,298 +135,330 @@ export function ProfileScreen() {
   }
 
   return (
-    <ScrollView style={dynamicStyles.container}>
+    <ScrollView style={styles.container}>
       {/* Header */}
-      <View style={dynamicStyles.header}>
-        <View style={dynamicStyles.avatarContainer}>
-          <Text style={dynamicStyles.avatar}>
-            {displayProfile?.fullName?.charAt(0).toUpperCase() || '👤'}
+      <View style={styles.header}>
+        <View style={styles.avatarContainer}>
+          <Text style={styles.avatarText}>
+            {displayProfile?.fullName?.charAt(0).toUpperCase() || 'U'}
           </Text>
         </View>
-        <Text style={dynamicStyles.userName}>
+        <Text
+          style={styles.userName}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
           {displayProfile?.fullName || 'Usuário'}
         </Text>
-        <Text style={dynamicStyles.userEmail}>{displayProfile?.email}</Text>
+        <Text style={styles.userEmail}>{displayProfile?.email}</Text>
       </View>
 
-      {/* Informações do Perfil */}
-      <View style={dynamicStyles.section}>
-        <Text style={dynamicStyles.sectionTitle}>Informações Pessoais</Text>
-
-        <View style={dynamicStyles.infoItem}>
-          <Text style={dynamicStyles.infoLabel}>Nome</Text>
-          <Text style={dynamicStyles.infoValue}>
-            {displayProfile?.fullName}
-          </Text>
-        </View>
-
-        <View style={dynamicStyles.infoItem}>
-          <Text style={dynamicStyles.infoLabel}>Email</Text>
-          <Text style={dynamicStyles.infoValue}>{displayProfile?.email}</Text>
-        </View>
-
-        <View style={dynamicStyles.infoItem}>
-          <Text style={dynamicStyles.infoLabel}>ID de Usuário</Text>
-          <Text style={dynamicStyles.infoValueMonospace}>
-            {displayProfile?.id}
-          </Text>
-        </View>
-
-        {displayProfile?.createdAt && (
-          <View style={dynamicStyles.infoItem}>
-            <Text style={dynamicStyles.infoLabel}>Cadastrado em</Text>
-            <Text style={dynamicStyles.infoValue}>
-              {new Date(displayProfile.createdAt).toLocaleDateString('pt-BR')}
-            </Text>
+      <View style={styles.content}>
+        {/* Informações Pessoais */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Informações Pessoais</Text>
+          <View style={styles.card}>
+            <View style={styles.infoRow}>
+              <View style={styles.infoIcon}>
+                <Ionicons name="person-outline" size={20} color="#6B7280" />
+              </View>
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Nome Completo</Text>
+                <Text style={styles.infoValue}>{displayProfile?.fullName}</Text>
+              </View>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.infoRow}>
+              <View style={styles.infoIcon}>
+                <Ionicons name="mail-outline" size={20} color="#6B7280" />
+              </View>
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Email</Text>
+                <Text style={styles.infoValue}>{displayProfile?.email}</Text>
+              </View>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.infoRow}>
+              <View style={styles.infoIcon}>
+                <Ionicons name="calendar-outline" size={20} color="#6B7280" />
+              </View>
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Membro desde</Text>
+                <Text style={styles.infoValue}>
+                  {displayProfile?.createdAt
+                    ? new Date(displayProfile.createdAt).toLocaleDateString('pt-BR')
+                    : '-'}
+                </Text>
+              </View>
+            </View>
           </View>
-        )}
-      </View>
+        </View>
 
-      {/* Ações */}
-      <View style={dynamicStyles.section}>
-        <Text style={dynamicStyles.sectionTitle}>Ações</Text>
+        {/* Ações */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Ações da Conta</Text>
 
-        {/* Botões de Troca de Perfil */}
-        {user?.passenger && user?.role === 'DRIVER' && (
-          <TouchableOpacity
-            style={[
-              dynamicStyles.actionButton,
-              { backgroundColor: theme.colors.primary + '10' },
-            ]}
-            onPress={() => handleSwitchRole('PASSENGER')}
-          >
-            <Text style={dynamicStyles.actionButtonIcon}>👤</Text>
-            <Text
-              style={[
-                dynamicStyles.actionButtonText,
-                { color: theme.colors.primary },
-              ]}
+          {/* Botões de Troca de Perfil */}
+          {user?.passenger && user?.role === 'DRIVER' && (
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => handleSwitchRole('PASSENGER')}
             >
-              Alternar para Passageiro
-            </Text>
-          </TouchableOpacity>
-        )}
+              <View style={[styles.actionIcon, { backgroundColor: '#EEF2FF' }]}>
+                <Ionicons name="person" size={20} color="#4F46E5" />
+              </View>
+              <Text style={styles.actionText}>Alternar para Passageiro</Text>
+              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+            </TouchableOpacity>
+          )}
 
-        {user?.driver && user?.role === 'PASSENGER' && (
-          <TouchableOpacity
-            style={[
-              dynamicStyles.actionButton,
-              { backgroundColor: '#10B98110' },
-            ]}
-            onPress={() => handleSwitchRole('DRIVER')}
-          >
-            <Text style={dynamicStyles.actionButtonIcon}>🚗</Text>
-            <Text
-              style={[dynamicStyles.actionButtonText, { color: '#059669' }]}
+          {user?.driver && user?.role === 'PASSENGER' && (
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => handleSwitchRole('DRIVER')}
             >
-              Alternar para Motorista
-            </Text>
-          </TouchableOpacity>
-        )}
+              <View style={[styles.actionIcon, { backgroundColor: '#ECFDF5' }]}>
+                <Ionicons name="car" size={20} color="#10B981" />
+              </View>
+              <Text style={styles.actionText}>Alternar para Motorista</Text>
+              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+            </TouchableOpacity>
+          )}
 
-        {/* Caso não tenha o perfil de motorista ainda */}
-        {!user?.driver && (
+          {!user?.driver && (
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => setIsRegisteringDriver(true)}
+            >
+              <View style={[styles.actionIcon, { backgroundColor: '#EEF2FF' }]}>
+                <Ionicons name="add-circle-outline" size={20} color="#4F46E5" />
+              </View>
+              <Text style={styles.actionText}>Tornar-se Motorista</Text>
+              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
-            style={dynamicStyles.actionButton}
-            onPress={() => setIsRegisteringDriver(true)}
+            style={styles.actionButton}
+            onPress={loadProfile}
           >
-            <Text style={dynamicStyles.actionButtonIcon}>➕</Text>
-            <Text style={dynamicStyles.actionButtonText}>
-              Tornar-se Motorista
-            </Text>
+            <View style={[styles.actionIcon, { backgroundColor: '#F3F4F6' }]}>
+              <Ionicons name="refresh-outline" size={20} color="#4B5563" />
+            </View>
+            <Text style={styles.actionText}>Atualizar Dados</Text>
+            <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
           </TouchableOpacity>
-        )}
 
-        <TouchableOpacity
-          style={dynamicStyles.actionButton}
-          onPress={loadProfile}
-        >
-          <Text style={dynamicStyles.actionButtonIcon}>🔄</Text>
-          <Text style={dynamicStyles.actionButtonText}>Atualizar Perfil</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.logoutAction]}
+            onPress={handleLogout}
+          >
+            <View style={[styles.actionIcon, { backgroundColor: '#FEF2F2' }]}>
+              <Ionicons name="log-out-outline" size={20} color="#EF4444" />
+            </View>
+            <Text style={[styles.actionText, styles.logoutText]}>Sair da Conta</Text>
+          </TouchableOpacity>
+        </View>
 
-        <TouchableOpacity
-          style={[dynamicStyles.actionButton, dynamicStyles.logoutActionButton]}
-          onPress={handleLogout}
-        >
-          <Text style={dynamicStyles.actionButtonIcon}>🚪</Text>
-          <Text style={dynamicStyles.logoutActionButtonText}>Fazer Logout</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Footer */}
-      <View style={dynamicStyles.footer}>
-        <Text style={dynamicStyles.footerText}>Versão 1.0.0</Text>
+        <View style={styles.footer}>
+          <Text style={styles.versionText}>Versão 1.0.0</Text>
+        </View>
       </View>
     </ScrollView>
   );
 }
 
-const createProfileStyles = (theme: any) =>
-  StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-    },
-    loadingText: {
-      marginTop: 16,
-      fontSize: 16,
-      color: theme.colors.textSecondary,
-      textAlign: 'center',
-    },
-    errorContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 24,
-    },
-    errorIcon: {
-      fontSize: 64,
-      marginBottom: 16,
-    },
-    errorTitle: {
-      fontSize: 20,
-      fontWeight: '700',
-      color: theme.colors.text,
-      marginBottom: 8,
-      textAlign: 'center',
-    },
-    errorMessage: {
-      fontSize: 14,
-      color: theme.colors.textSecondary,
-      textAlign: 'center',
-      marginBottom: 24,
-      lineHeight: 20,
-    },
-    retryButton: {
-      backgroundColor: theme.colors.primary,
-      paddingHorizontal: 24,
-      paddingVertical: 12,
-      borderRadius: 8,
-      marginBottom: 12,
-      width: '100%',
-    },
-    retryButtonText: {
-      color: theme.colors.background,
-      fontWeight: '600',
-      fontSize: 14,
-      textAlign: 'center',
-    },
-    logoutButton: {
-      backgroundColor: theme.colors.error,
-      paddingHorizontal: 24,
-      paddingVertical: 12,
-      borderRadius: 8,
-      width: '100%',
-    },
-    logoutButtonText: {
-      color: '#ffffff',
-      fontWeight: '600',
-      fontSize: 14,
-      textAlign: 'center',
-    },
-    header: {
-      paddingVertical: 32,
-      paddingHorizontal: 24,
-      alignItems: 'center',
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.border,
-    },
-    avatarContainer: {
-      width: 120,
-      height: 120,
-      borderRadius: 60,
-      backgroundColor: theme.colors.surface,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: 16,
-      borderWidth: 2,
-      borderColor: theme.colors.primary,
-    },
-    avatar: {
-      fontSize: 48,
-    },
-    userName: {
-      fontSize: 24,
-      fontWeight: '700',
-      color: theme.colors.text,
-      marginBottom: 4,
-    },
-    userEmail: {
-      fontSize: 14,
-      color: theme.colors.textSecondary,
-    },
-    section: {
-      paddingHorizontal: 24,
-      paddingVertical: 20,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.border,
-    },
-    sectionTitle: {
-      fontSize: 16,
-      fontWeight: '700',
-      color: theme.colors.text,
-      marginBottom: 16,
-    },
-    infoItem: {
-      marginBottom: 16,
-      paddingBottom: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.border,
-    },
-    infoLabel: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: theme.colors.textSecondary,
-      textTransform: 'uppercase',
-      marginBottom: 4,
-    },
-    infoValue: {
-      fontSize: 16,
-      fontWeight: '500',
-      color: theme.colors.text,
-    },
-    infoValueMonospace: {
-      fontSize: 12,
-      fontWeight: '500',
-      color: theme.colors.textSecondary,
-      fontFamily: 'Courier New',
-    },
-    actionButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: theme.colors.surface,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderRadius: 8,
-      marginBottom: 12,
-    },
-    logoutActionButton: {
-      borderColor: theme.colors.error,
-      backgroundColor: `${theme.colors.error}15`,
-    },
-    actionButtonIcon: {
-      fontSize: 20,
-      marginRight: 12,
-    },
-    actionButtonText: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: theme.colors.text,
-    },
-    logoutActionButtonText: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: theme.colors.error,
-    },
-    footer: {
-      paddingVertical: 24,
-      alignItems: 'center',
-    },
-    footerText: {
-      fontSize: 12,
-      color: theme.colors.textSecondary,
-    },
-  });
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F9FAFB',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#6B7280',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+    backgroundColor: '#F9FAFB',
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  errorMessage: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  retryButton: {
+    backgroundColor: '#4F46E5',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+    width: '100%',
+    alignItems: 'center',
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  logoutButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    width: '100%',
+    alignItems: 'center',
+  },
+  logoutButtonText: {
+    color: '#EF4444',
+    fontWeight: '600',
+  },
+  header: {
+    backgroundColor: '#4F46E5',
+    paddingTop: 48,
+    paddingBottom: 32,
+    paddingHorizontal: 24, // Adicionado padding horizontal para evitar que o texto toque as bordas
+    alignItems: 'center',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+  },
+  avatarContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
+  },
+  avatarText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  userName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 4,
+    textAlign: 'center', // Centralizar texto
+  },
+  userEmail: {
+    fontSize: 14,
+    color: '#E0E7FF',
+  },
+  content: {
+    padding: 24,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6B7280',
+    textTransform: 'uppercase',
+    marginBottom: 12,
+    marginLeft: 4,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  infoIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  infoContent: {
+    flex: 1,
+  },
+  infoLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginBottom: 2,
+  },
+  infoValue: {
+    fontSize: 16,
+    color: '#111827',
+    fontWeight: '500',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    marginVertical: 8,
+    marginLeft: 44,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  actionIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  actionText: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#111827',
+  },
+  logoutAction: {
+    marginTop: 12,
+  },
+  logoutText: {
+    color: '#EF4444',
+  },
+  footer: {
+    alignItems: 'center',
+    paddingBottom: 24,
+  },
+  versionText: {
+    fontSize: 12,
+    color: '#9CA3AF',
+  },
+});
