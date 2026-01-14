@@ -20,6 +20,10 @@ export class TripsService {
     return this.repository.findById(id);
   }
 
+  async findByPassengerId(passengerId: string): Promise<TripSchema[]> {
+    return this.repository.findByPassengerId(passengerId);
+  }
+
   async findAll(): Promise<TripSchema[]> {
     return this.repository.findAll();
   }

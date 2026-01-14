@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, memo } from 'react';
+import React, { useState, useCallback, useMemo, memo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,14 +6,18 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
-  type GestureResponderEvent,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../../../contexts/AuthContext';
+import api from '../../../../services/api';
+import { Trip as ApiTrip, TripStatus } from '@toinu/shared-types';
 
-interface Trip {
-  readonly id: number;
-  readonly type: 'bus' | 'train' | 'bike';
+// Interface para exibição (adaptada da API)
+interface DisplayTrip {
+  readonly id: string;
+  readonly type: 'bus' | 'train' | 'bike' | 'car';
   readonly from: string;
   readonly to: string;
   readonly date: string;
@@ -22,10 +26,11 @@ interface Trip {
   readonly price: string;
   readonly icon: React.ComponentProps<typeof Ionicons>['name'];
   readonly color: string;
+  readonly status: TripStatus;
 }
 
 interface TripCardProps {
-  readonly trip: Trip;
+  readonly trip: DisplayTrip;
 }
 
 const TripCard = memo(({ trip }: TripCardProps) => (
@@ -78,83 +83,64 @@ interface PassengersHomeScreenProps {
 export function PassengersHomeScreen({
   onProfilePress,
 }: PassengersHomeScreenProps) {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
-  const upcomingTrips = useMemo(
-    (): readonly Trip[] => [
-      {
-        id: 1,
-        type: 'bus',
-        from: 'Estação Centro',
-        to: 'Terminal do Aeroporto 2',
-        date: 'Hoje',
-        time: '14:30',
-        duration: '45 min',
-        price: 'R$ 12,50',
-        icon: 'bus-outline',
-        color: '#3B82F6',
-      },
-      {
-        id: 2,
-        type: 'train',
-        from: 'Estação Central',
-        to: 'Zona Oeste',
-        date: 'Amanhã',
-        time: '09:00',
-        duration: '25 min',
-        price: 'R$ 8,00',
-        icon: 'train-outline',
-        color: '#10B981',
-      },
-      {
-        id: 3,
-        type: 'bike',
-        from: 'Avenida do Parque',
-        to: 'Centro da Cidade',
-        date: '5 de jan',
-        time: '11:00',
-        duration: '15 min',
-        price: 'R$ 3,00',
-        icon: 'bicycle-outline',
-        color: '#8B5CF6',
-      },
-    ],
-    [],
-  );
+  const [trips, setTrips] = useState<DisplayTrip[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const pastTrips = useMemo(
-    (): readonly Trip[] => [
-      {
-        id: 4,
-        type: 'bus',
-        from: 'Casa',
-        to: 'Escritório',
-        date: 'Ontem',
-        time: '08:30',
-        duration: '30 min',
-        price: 'R$ 10,00',
-        icon: 'bus-outline',
-        color: '#3B82F6',
-      },
-      {
-        id: 5,
-        type: 'train',
-        from: 'Shopping',
-        to: 'Centro',
-        date: '1 de jan',
-        time: '17:00',
-        duration: '20 min',
-        price: 'R$ 7,50',
-        icon: 'train-outline',
-        color: '#10B981',
-      },
-    ],
-    [],
-  );
+  const fetchTrips = useCallback(async () => {
+    if (!user?.passenger?.id) return;
 
-  const trips = useMemo(
-    () => (activeTab === 'upcoming' ? upcomingTrips : pastTrips),
-    [activeTab, upcomingTrips, pastTrips],
-  );
+    try {
+      setLoading(true);
+      const response = await api.get<ApiTrip[]>(
+        `/passengers/${user.passenger.id}/trips`,
+      );
+
+      // Adaptar dados da API para exibição
+      const adaptedTrips: DisplayTrip[] = response.data.map((trip) => {
+        const date = new Date(trip.createdAt);
+        return {
+          id: trip.id,
+          type: 'car', // Padrão por enquanto
+          from: trip.origin,
+          to: trip.destination,
+          date: date.toLocaleDateString('pt-BR'),
+          time: date.toLocaleTimeString('pt-BR', {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+          duration: 'N/A', // API não retorna ainda
+          price: 'R$ --', // API não retorna ainda
+          icon: 'car-outline',
+          color: '#4F46E5',
+          status: trip.status,
+        };
+      });
+
+      setTrips(adaptedTrips);
+    } catch (error) {
+      console.error('Erro ao buscar viagens:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.passenger?.id]);
+
+  useEffect(() => {
+    fetchTrips();
+  }, [fetchTrips]);
+
+  const filteredTrips = useMemo(() => {
+    // Filtrar por status ou data se necessário
+    // Por enquanto, vamos simular que 'upcoming' são as REQUESTED/ACCEPTED e 'past' são COMPLETED/CANCELED
+    if (activeTab === 'upcoming') {
+      return trips.filter((t) =>
+        ['REQUESTED', 'ACCEPTED', 'STARTED'].includes(t.status),
+      );
+    } else {
+      return trips.filter((t) => ['COMPLETED', 'CANCELED'].includes(t.status));
+    }
+  }, [trips, activeTab]);
 
   const handleTabChange = useCallback((tab: 'upcoming' | 'past') => {
     setActiveTab(tab);
@@ -164,14 +150,23 @@ export function PassengersHomeScreen({
     onProfilePress?.();
   }, [onProfilePress]);
 
+  const handleMotoPress = useCallback(() => {
+    Alert.alert(
+      'Indisponível',
+      'Viagens de moto estão indisponíveis no momento.',
+    );
+  }, []);
+
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <View>
+          <View style={styles.headerTextContainer}>
             <Text style={styles.greeting}>Bem-vindo de volta,</Text>
-            <Text style={styles.userName}>Sarah Johnson</Text>
+            <Text style={styles.userName} numberOfLines={1} ellipsizeMode="tail">
+              {user?.fullName || 'Passageiro'}
+            </Text>
           </View>
           <View style={styles.headerButtons}>
             <TouchableOpacity style={styles.headerButton}>
@@ -198,16 +193,18 @@ export function PassengersHomeScreen({
           </View>
           <View style={styles.transportButtons}>
             <TouchableOpacity style={styles.transportButton}>
-              <Ionicons name="bus-outline" size={16} color="#4F46E5" />
-              <Text style={styles.transportButtonText}>Ônibus</Text>
+              <Ionicons name="car-outline" size={16} color="#4F46E5" />
+              <Text style={styles.transportButtonText}>Carro</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.transportButton}>
-              <Ionicons name="train-outline" size={16} color="#4F46E5" />
-              <Text style={styles.transportButtonText}>Trem</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.transportButton}>
-              <Ionicons name="bicycle-outline" size={16} color="#4F46E5" />
-              <Text style={styles.transportButtonText}>Bike</Text>
+            <TouchableOpacity
+              style={[styles.transportButton, styles.disabledButton]}
+              onPress={handleMotoPress}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="bicycle-outline" size={16} color="#9CA3AF" />
+              <Text style={[styles.transportButtonText, styles.disabledButtonText]}>
+                Moto
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -252,16 +249,22 @@ export function PassengersHomeScreen({
         style={styles.tripList}
         contentContainerStyle={styles.tripListContent}
       >
-        {trips.map((trip) => (
-          <TripCard key={trip.id} trip={trip} />
-        ))}
+        {loading ? (
+          <ActivityIndicator size="large" color="#4F46E5" />
+        ) : filteredTrips.length > 0 ? (
+          filteredTrips.map((trip) => <TripCard key={trip.id} trip={trip} />)
+        ) : (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>Nenhuma viagem encontrada</Text>
+          </View>
+        )}
       </ScrollView>
 
       {/* Floating Action Button */}
       <TouchableOpacity style={styles.fab}>
         <Ionicons name="navigate" size={24} color="#FFFFFF" />
       </TouchableOpacity>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -279,8 +282,12 @@ const styles = StyleSheet.create({
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: 24,
+  },
+  headerTextContainer: {
+    flex: 1,
+    marginRight: 16,
   },
   greeting: {
     fontSize: 14,
@@ -295,6 +302,7 @@ const styles = StyleSheet.create({
   headerButtons: {
     flexDirection: 'row',
     gap: 12,
+    flexShrink: 0,
   },
   headerButton: {
     width: 40,
@@ -338,10 +346,17 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     gap: 8,
   },
+  disabledButton: {
+    backgroundColor: '#F3F4F6',
+    opacity: 0.7,
+  },
   transportButtonText: {
     fontSize: 14,
     color: '#4F46E5',
     fontWeight: '600',
+  },
+  disabledButtonText: {
+    color: '#9CA3AF',
   },
   tabsContainer: {
     flexDirection: 'row',
@@ -453,5 +468,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  emptyStateText: {
+    color: '#6B7280',
+    fontSize: 16,
   },
 });

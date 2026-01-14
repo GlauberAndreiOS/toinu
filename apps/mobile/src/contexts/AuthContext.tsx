@@ -7,7 +7,7 @@ import React, {
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authApi, AuthResponse } from '@services/api';
-import { User } from '@toinu/shared-types';
+import { User, UserRole } from '@toinu/shared-types';
 
 interface AdditionalData {
   fullName?: string;
@@ -142,8 +142,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     additionalData?: AdditionalData,
   ) => {
     try {
-      // Prepara os dados para envio, garantindo que campos obrigatórios estejam presentes
-      // O backend espera CreateUserDto que tem campos na raiz
       const registerData: any = {
         email,
         password,
@@ -198,7 +196,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
   const switchRole = async (role: 'DRIVER' | 'PASSENGER') => {
     if (!user) return;
-    const updatedUser = { ...user, role };
+    const newRole = role === 'DRIVER' ? UserRole.DRIVER : UserRole.PASSENGER;
+    const updatedUser = { ...user, role: newRole };
     setUser(updatedUser);
     await AsyncStorage.setItem('@auth_user', JSON.stringify(updatedUser));
   };

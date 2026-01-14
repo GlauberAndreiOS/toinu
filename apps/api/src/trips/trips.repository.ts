@@ -18,6 +18,22 @@ export class TripsRepository {
     });
   }
 
+  async findByPassengerId(passengerId: string): Promise<TripSchema[]> {
+    return this.prisma.trip.findMany({
+      where: { passengerId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        driver: {
+          include: {
+            user: true, // Para pegar o nome do motorista se necessário
+            vehicles: true,
+          }
+        },
+        vehicle: true,
+      }
+    });
+  }
+
   async findAll(): Promise<TripSchema[]> {
     return this.prisma.trip.findMany({
       orderBy: { createdAt: 'desc' },

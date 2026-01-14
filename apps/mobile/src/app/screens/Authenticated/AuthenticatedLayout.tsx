@@ -1,11 +1,14 @@
 import React, { useState, useCallback, memo } from 'react';
-import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { PassengersHomeScreen } from './Passengers';
 import { DriversHomeScreen } from './Drivers';
 import { ProfileScreen } from './ProfileScreen';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '@contexts/AuthContext';
 
 type TabType = 'trips' | 'explore' | 'favorites' | 'profile';
 
@@ -65,10 +68,6 @@ const TabButton = memo(({ tab, isActive, onPress }: TabButtonProps) => (
 
 TabButton.displayName = 'TabButton';
 
-interface ScreenProps {
-  readonly key: string;
-}
-
 const renderScreen = (
   activeTab: TabType,
   onProfilePress: () => void,
@@ -104,6 +103,7 @@ const renderScreen = (
 export function AuthenticatedLayout() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('trips');
+  const insets = useSafeAreaInsets();
 
   const handleTabPress = useCallback((tab: TabType) => {
     setActiveTab(tab);
@@ -120,7 +120,15 @@ export function AuthenticatedLayout() {
       </View>
 
       {/* Bottom Tab Bar */}
-      <View style={styles.tabBar}>
+      <View
+        style={[
+          styles.tabBar,
+          {
+            paddingBottom: Math.max(insets.bottom, 10),
+            height: 60 + Math.max(insets.bottom, 10),
+          },
+        ]}
+      >
         {TABS.map((tab) => (
           <TabButton
             key={tab.id}
@@ -147,17 +155,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
-    height: Platform.select({
-      ios: 80,
-      android: 70,
-    }),
-    paddingBottom: Platform.select({
-      ios: 20,
-      android: 10,
-    }),
     paddingHorizontal: 12,
     justifyContent: 'space-around',
-    alignItems: 'center',
+    alignItems: 'center', // Centraliza verticalmente o conteúdo (ícones)
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.05,

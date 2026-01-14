@@ -7,16 +7,21 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { Passenger } from '@toinu/shared-types';
+import { Passenger, Trip } from '@toinu/shared-types';
 import { PassengersService } from './passengers.service';
 import { PassengersResource } from './passengers.resource';
 import { UpdatePassengerDto } from './dto/update-passenger.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { TripsService } from '../trips/trips.service';
+import { TripsResource } from '../trips/trips.resource';
 
 @Controller('passengers')
 @UseGuards(JwtAuthGuard)
 export class PassengersController {
-  constructor(private readonly passengersService: PassengersService) {}
+  constructor(
+    private readonly passengersService: PassengersService,
+    private readonly tripsService: TripsService,
+  ) {}
 
   @Get()
   async findAll(): Promise<Passenger[]> {
@@ -28,6 +33,12 @@ export class PassengersController {
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Passenger | null> {
     return PassengersResource.format(await this.passengersService.findOne(id));
+  }
+
+  @Get(':id/trips')
+  async findTrips(@Param('id') id: string): Promise<Trip[]> {
+    const trips = await this.tripsService.findByPassengerId(id);
+    return TripsResource.formatMany(trips);
   }
 
   @Post(':id')
